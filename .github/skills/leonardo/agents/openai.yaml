@@ -1,0 +1,5 @@
+interface:
+  display_name: "Leonardo"
+  short_description: "Create 2D, 3D, pixel, and game art"
+  default_prompt: "Use $leonardo to create a polished, production-ready visual asset."
+  brand_color: "#D97706"

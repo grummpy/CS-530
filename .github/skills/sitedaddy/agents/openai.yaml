@@ -1,0 +1,5 @@
+interface:
+  display_name: "Sitedaddy"
+  short_description: "Design, grow, secure, and manage websites"
+  default_prompt: "Use $sitedaddy to improve and manage this website as a fast, secure business asset."
+  brand_color: "#0F766E"
