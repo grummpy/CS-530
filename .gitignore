@@ -1,0 +1,24 @@
+# Operating-system files
+.DS_Store
+Thumbs.db
+
+# Editor and IDE settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Common build and cache output
+build/
+dist/
+out/
+coverage/
+.cache/
+__pycache__/
+*.py[cod]
+node_modules/
