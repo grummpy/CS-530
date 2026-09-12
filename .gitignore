@@ -22,4 +22,5 @@ coverage/
 __pycache__/
 *.py[cod]
 .venv/
+*.egg-info/
 node_modules/
