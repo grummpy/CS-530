@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+src/starfall/__init__.py
+src/starfall/__main__.py
+src/starfall/app.py
+src/starfall/game.py
+src/starfall_sentinel.egg-info/PKG-INFO
+src/starfall_sentinel.egg-info/SOURCES.txt
+src/starfall_sentinel.egg-info/dependency_links.txt
+src/starfall_sentinel.egg-info/requires.txt
+src/starfall_sentinel.egg-info/top_level.txt
+tests/test_game.py

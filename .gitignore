@@ -21,4 +21,5 @@ coverage/
 .cache/
 __pycache__/
 *.py[cod]
+.venv/
 node_modules/

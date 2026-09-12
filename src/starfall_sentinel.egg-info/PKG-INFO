@@ -1,3 +1,11 @@
+Metadata-Version: 2.4
+Name: starfall-sentinel
+Version: 0.1.0
+Summary: A compact top-down 2D survival game for CS-530.
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: pygame-ce<3,>=2.5
+
 # CS-530 2D Game: Starfall Arena
 
 **Starfall Arena** is a compact local two-player arcade-fighter engine inspired by the speed, air mobility, and dramatic knockback of classic team-based arcade fighters. It intentionally uses original geometry-based fighters rather than third-party character assets.
