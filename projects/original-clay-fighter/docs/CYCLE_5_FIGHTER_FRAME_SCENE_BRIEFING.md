@@ -1,6 +1,7 @@
 # Cycle 5 Fighter, Frame, and Scene Integration Briefing
 
-**Status:** Approval required. Do not implement Cycle 5 until approved.  
+**Status:** Implemented (approved scope); evidence:
+`evidence/G5/FIGHTER_FRAME_SCENE_REPORT_2026-09-13.md`.
 **Baseline:** Cycle 4 commit `4448d8d`; 20 tests, Ruff, deterministic replay, and smoke checks passed.  
 **Scope:** Integrate existing Blender-made character and scene assets into the authoritative combat and presentation state. No character-art creation or redesign is included.
 

@@ -16,5 +16,8 @@ authoritative result payloads are simulation-owned. See
 `evidence/G4/FUNDAMENTAL_FIGHT_LOOP_REPORT_2026-09-13.md` for validation
 evidence and the remaining pre-existing presentation typing limitation.
 
-Cycle 5 existing-asset fighter, frame, and scene integration awaits approval.
-See `CYCLE_5_FIGHTER_FRAME_SCENE_BRIEFING.md`.
+Cycle 5 existing-asset fighter, frame, and scene integration is complete.
+Manifest cadence, source-pivot placement with a diagnostic fallback, state and
+stage validation, and cached transforms remain presentation-only. See
+`evidence/G5/FIGHTER_FRAME_SCENE_REPORT_2026-09-13.md` for commit-pinned
+implementation and actual validation results.
