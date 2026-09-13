@@ -41,7 +41,7 @@ def _active_clip(fighter: object) -> str:
         if fighter.fighter_id == "tech_billionaire":
             if fighter.attack_kind == 4: return "exosuit_call"
             if fighter.armor_ticks: return "armor_kick" if fighter.attack_kind == 3 else "armor_punch"
-        return {1: "light", 2: "medium", 3: "heavy", 4: "hostile_takeover" if fighter.fighter_id == "mr_president" else "star_chord"}.get(fighter.attack_kind, "idle")
+        return {1: "light", 2: "medium", 3: "heavy", 4: "hostile_takeover" if fighter.fighter_id == "mr_president" else "kitchen_rush" if fighter.fighter_id == "master_chef" else "star_chord"}.get(fighter.attack_kind, "idle")
     if fighter.fighter_id == "tech_billionaire" and fighter.armor_ticks: return "armor_idle"
     return "idle"
 
@@ -51,7 +51,7 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
     pygame.init(); screen = pygame.display.set_mode((1280, 720)); pygame.display.set_caption(title); clock = pygame.time.Clock(); font = pygame.font.Font(None, 28)
     stage = _load_stage(pygame)
     start_match_music(pygame, seed)
-    game = SessionKernel(seed=seed, p1_id="rhinestone_angel", p2_id="tech_billionaire"); previous = [0, 0]; running = True
+    game = SessionKernel(seed=seed, p1_id="rhinestone_angel", p2_id="master_chef"); previous = [0, 0]; running = True
     fighter_sprites = {fighter_id: _load_fighter_sprite(pygame, fighter_id) for fighter_id in (game.match.p1.fighter_id, game.match.p2.fighter_id)}
     fighter_clips = {fighter_id: _load_fighter_clips(pygame, fighter_id) for fighter_id in (game.match.p1.fighter_id, game.match.p2.fighter_id)}
     bindings = ((pygame.K_a, pygame.K_d, pygame.K_w, pygame.K_s, pygame.K_f, pygame.K_g, pygame.K_h, pygame.K_j), (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_KP1, pygame.K_KP2, pygame.K_KP3, pygame.K_KP0))

@@ -1,0 +1,9 @@
+schema: fighter.boxes.v1
+fighter_id: master_chef
+push_box: {x: -34, y: -160, w: 68, h: 160}
+hurt_box: {x: -39, y: -164, w: 78, h: 154}
+moves:
+  light: {active_frames: [6, 7], hit_box: {x: 18, y: -136, w: 80, h: 36}}
+  medium: {active_frames: [9, 10], hit_box: {x: 20, y: -142, w: 98, h: 44}}
+  heavy: {active_frames: [13, 14], hit_box: {x: 22, y: -154, w: 120, h: 56}}
+  kitchen_rush: {active_frames: [13, 17], hit_box: {x: 16, y: -150, w: 132, h: 68}}

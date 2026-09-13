@@ -6,4 +6,6 @@ Mr. President’s original, fictional neon-orange clay character sheet was gener
 
 The Tech Billionaire’s visual bible and armored combat reference were generated with the built-in image generator on 2026-09-13 and retained under `art_source/characters/tech_billionaire/`. The native master and transparent clip library were built with Blender 5.2.1 from `build_sprite_library.py`; the project retains the Blender master, source script, manifests, and generated runtime frames together.
 
+Master Chef’s approved asset sheet was generated with the built-in image generator on 2026-09-13 and retained under `art_source/characters/master_chef/`. His native master and transparent clip library were built with Blender 5.2.1 from the adjacent `build_sprite_library.py` source.
+
 The handoff claimed 51 synthesized placeholder WAV files and one graybox turnaround image, but neither is present in this repository tree after reconciliation. Character sprites, HUD/button art, and finisher video files remain separate production work.

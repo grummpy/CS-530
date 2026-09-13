@@ -1,0 +1,10 @@
+schema: fighter.profile.v1
+id: master_chef
+version: 1
+display_name: Master Chef
+palette: [chef_white, charcoal, golden_blonde, steel, salmon_coral]
+silhouette: chef_jacket_dual_cooking_tools
+runtime_portrait: assets/characters/master_chef/portrait.png
+moves: master_chef
+special: kitchen_rush
+stage_default: wellness_mall_studio

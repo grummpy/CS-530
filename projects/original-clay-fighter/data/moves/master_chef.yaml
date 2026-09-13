@@ -1,0 +1,13 @@
+schema: fighter.moves.v1
+fighter_id: master_chef
+special:
+  id: kitchen_rush
+  input: special
+  startup: 13
+  active: 5
+  recovery: 21
+  damage: 100
+  hit_level: mid
+  event_frame: 13
+  effect: harmless_kitchen_spark
+  note: Crossed chef knife and intact salmon-tail sweep; props are stylized, non-graphic cooking tools.
