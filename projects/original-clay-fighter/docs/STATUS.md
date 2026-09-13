@@ -5,7 +5,9 @@ prototype contains four selectable clay fighters, three arena backgrounds,
 local/CPU matches, runtime PCM music, HUD health/block/special indicators, and
 12 finisher frame sequences.
 
-Cycle 2 requirements and architecture are awaiting approval. No Cycle 2
-implementation is authorized. See `COMMERCIAL_READINESS_AUDIT.md` and
-`evidence/CYCLE_1_BASELINE.md` for the verified baseline, open requirements,
-and the approval boundary.
+Cycle 3 deterministic-combat work is complete. The fixed-step clock is
+authoritative in the windowed loop, and validated fighter/move/box content
+drives existing combat values. See
+`evidence/G3/CONTENT_AUTHORITATIVE_REPORT_2026-09-13.md` for the content
+contract and validation evidence. Cycle 4 fundamental fight-loop work awaits
+approval.

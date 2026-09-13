@@ -1,12 +1,18 @@
 schema: fighter.moves.v1
 fighter_id: mr_president
+moves:
+  light: {input: light, startup: 5, active: 2, recovery: 5, damage: 35, hitstun: 11}
+  medium: {input: medium, startup: 8, active: 2, recovery: 8, damage: 70, hitstun: 14}
+  heavy: {input: heavy, startup: 12, active: 2, recovery: 11, damage: 105, hitstun: 17}
 special:
   id: hostile_takeover
   input: special
+  charge_requirement: 210
   startup: 14
   active: 4
   recovery: 24
   damage: 90
+  hitstun: 20
   hit_level: mid
   event_frame: 14
   effect: harmless_paperwork_burst

@@ -1,19 +1,22 @@
 """Small deterministic combat loop; presentation never mutates this module's state."""
 
+from fighter.content.loader import FighterDefinition, load_fighter
 from fighter.sim.bits import Action
+from fighter.sim.boxes import Box
 from fighter.sim.constants import LEFT_WALL, RIGHT_WALL, WALK_SPEED
 from fighter.sim.input_frame import InputFrame
+from fighter.sim.moves import MoveDefinition
 from fighter.sim.state import FighterState, MatchState, initial_match
 
 
 def new_match(
     seed: int = 1, p1_id: str = "graybox_rival", p2_id: str = "graybox_rival", training: int = 0
 ) -> MatchState:
-    return initial_match(seed, p1_id, p2_id, training)
+    return initial_match(seed, p1_id, p2_id, training, load_fighter(p1_id), load_fighter(p2_id))
 
 
 def reset_round(match: MatchState) -> None:
-    fresh = initial_match(match.seed, match.p1.fighter_id, match.p2.fighter_id, match.training)
+    fresh = new_match(match.seed, match.p1.fighter_id, match.p2.fighter_id, match.training)
     match.p1, match.p2, match.tick, match.phase, match.events, match.round_ticks = (
         fresh.p1,
         fresh.p2,
@@ -32,54 +35,88 @@ def _move(f: FighterState, held: int) -> None:
     f.x = max(LEFT_WALL, min(RIGHT_WALL, f.x + direction * WALK_SPEED))
 
 
-ARMOR_CHARGE_THRESHOLD = 210
-ARMOR_DURATION_TICKS = 600
+def _attack_kind(move_name: str) -> int:
+    return {"light": 1, "medium": 2, "heavy": 3}.get(move_name, 4)
 
 
-def _start_attack(f: FighterState, pressed: int, events: list[str]) -> None:
+def _start_attack(
+    f: FighterState, definition: FighterDefinition, pressed: int, events: list[str]
+) -> None:
     if f.stun_ticks or f.attack_ticks:
         return
-    for action, kind, length in (
-        (Action.LIGHT, 1, 12),
-        (Action.MEDIUM, 2, 18),
-        (Action.HEAVY, 3, 25),
-        (Action.SPECIAL, 4, 28),
-        (Action.THROW, 4, 16),
+    for action, move_name in (
+        (Action.LIGHT, "light"),
+        (Action.MEDIUM, "medium"),
+        (Action.HEAVY, "heavy"),
+        (Action.SPECIAL, definition.profile.special_id),
     ):
-        if pressed & action:
-            if action == Action.SPECIAL:
-                if f.special_charge < ARMOR_CHARGE_THRESHOLD:
-                    return
-                f.special_charge = 0
-                if f.fighter_id == "tech_billionaire":
-                    f.armor_charge = 0
-                    f.armor_ticks = ARMOR_DURATION_TICKS
-                    events.append("armor_mode_on")
-            f.attack_kind, f.attack_ticks, f.hit_this_attack = kind, length, False
+        if not (pressed & action) or move_name is None:
+            continue
+        if action == Action.SPECIAL:
+            move = definition.moves.get(move_name)
+            charge_requirement = (
+                definition.profile.armor_charge_requirement
+                if definition.profile.armor_charge_requirement is not None
+                else move.meter_cost if move is not None else 0
+            )
+            if f.special_charge < charge_requirement:
+                return
+            f.special_charge = 0
+            if definition.profile.armor_charge_requirement is not None:
+                f.armor_charge = 0
+                f.armor_ticks = definition.profile.armor_duration_ticks
+                events.append("armor_mode_on")
+                return
+        move = definition.moves.get(move_name)
+        if move is None:
             return
+        f.attack_kind = _attack_kind(move_name)
+        f.attack_move = move_name
+        f.attack_ticks = move.total
+        f.hit_this_attack = False
+        return
 
 
-def _resolve(attacker: FighterState, defender: FighterState, events: list[str]) -> None:
+def _active_hitbox(attacker: FighterState, move: MoveDefinition) -> Box | None:
+    frame = move.total - attacker.attack_ticks + 1
+    for window in move.hitboxes:
+        if window.start <= frame <= window.end:
+            return window.box.world(attacker.x, 600, attacker.facing)
+    return None
+
+
+def _resolve(
+    attacker: FighterState,
+    defender: FighterState,
+    definition: FighterDefinition,
+    defender_definition: FighterDefinition,
+    events: list[str],
+) -> None:
     if not attacker.attack_ticks or attacker.hit_this_attack:
         return
-    active = attacker.attack_ticks in {attacker.attack_kind + 5, attacker.attack_kind + 6}
-    if active and abs(attacker.x - defender.x) < 112:
-        damage = 35 * attacker.attack_kind + (
-            3 if attacker.fighter_id == "tech_billionaire" and attacker.armor_ticks else 0
+    move = definition.moves[attacker.attack_move]
+    hitbox = _active_hitbox(attacker, move)
+    defender_box = defender_definition.hurt_box.world(defender.x, 600, defender.facing)
+    if hitbox is not None and hitbox.intersects(defender_box):
+        damage = move.damage + (
+            definition.profile.armor_damage_bonus if attacker.armor_ticks else 0
         )
         if defender.blocking:
             damage = max(1, damage // 3)
             events.append("block")
         absorbed = damage
         defender.health = max(0, defender.health - damage)
-        if defender.fighter_id == "tech_billionaire":
-            defender.armor_charge = min(ARMOR_CHARGE_THRESHOLD, defender.armor_charge + absorbed)
-        defender.special_charge = min(ARMOR_CHARGE_THRESHOLD, defender.special_charge + absorbed)
-        defender.stun_ticks = 8 + attacker.attack_kind * 3
+        charge_limit = (
+            defender_definition.profile.armor_charge_requirement
+            if defender_definition.profile.armor_charge_requirement is not None
+            else max((candidate.meter_cost for candidate in defender_definition.moves.values()), default=0)
+        )
+        if defender_definition.profile.armor_charge_requirement is not None:
+            defender.armor_charge = min(charge_limit, defender.armor_charge + absorbed)
+        defender.special_charge = min(charge_limit, defender.special_charge + absorbed)
+        defender.stun_ticks = move.blockstun if defender.blocking else move.hitstun
         attacker.hit_this_attack = True
         events.append("hit")
-
-
 def tick(match: MatchState, inputs: tuple[InputFrame, InputFrame]) -> None:
     if match.phase != 1:
         return
@@ -87,9 +124,10 @@ def tick(match: MatchState, inputs: tuple[InputFrame, InputFrame]) -> None:
     for fighter, frame in zip((match.p1, match.p2), inputs, strict=True):
         fighter.facing = 1 if fighter is match.p1 else -1
         _move(fighter, frame.held)
-        _start_attack(fighter, frame.pressed, match.events)
-    _resolve(match.p1, match.p2, match.events)
-    _resolve(match.p2, match.p1, match.events)
+        _start_attack(fighter, fighter.definition, frame.pressed, match.events)
+    p1_definition, p2_definition = match.p1.definition, match.p2.definition
+    _resolve(match.p1, match.p2, p1_definition, p2_definition, match.events)
+    _resolve(match.p2, match.p1, p2_definition, p1_definition, match.events)
     for fighter in (match.p1, match.p2):
         fighter.attack_ticks = max(0, fighter.attack_ticks - 1)
         fighter.stun_ticks = max(0, fighter.stun_ticks - 1)

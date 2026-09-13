@@ -59,7 +59,7 @@ def load_moves() -> dict[str, dict[str, MoveDefinition]]:
     if _CATALOG is None:
         from fighter.content.loader import load_catalog
 
-        _CATALOG = load_catalog()
+        _CATALOG = {fighter_id: dict(definition.moves) for fighter_id, definition in load_catalog().items()}
     return _CATALOG
 
 

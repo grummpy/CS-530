@@ -1,19 +1,27 @@
 """Integer-only authoritative match state."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 from fighter.sim.constants import MAX_HEALTH, P1_SPAWN_X, P2_SPAWN_X
+
+if TYPE_CHECKING:
+    from fighter.content.loader import FighterDefinition
 
 
 @dataclass(slots=True)
 class FighterState:
     fighter_id: str
     x: int
+    definition: FighterDefinition
     health: int = MAX_HEALTH
     facing: int = 1
     attack_ticks: int = 0
     stun_ticks: int = 0
     attack_kind: int = 0
+    attack_move: str = ""
     hit_this_attack: bool = False
     armor_charge: int = 0
     armor_ticks: int = 0
@@ -29,6 +37,7 @@ class FighterState:
             "attack_ticks": self.attack_ticks,
             "stun_ticks": self.stun_ticks,
             "attack_kind": self.attack_kind,
+            "attack_move": self.attack_move,
             "hit": self.hit_this_attack,
             "armor_charge": self.armor_charge,
             "armor_ticks": self.armor_ticks,
@@ -60,10 +69,17 @@ class MatchState:
         }
 
 
-def initial_match(seed: int, p1_id: str, p2_id: str, training: int) -> MatchState:
+def initial_match(
+    seed: int,
+    p1_id: str,
+    p2_id: str,
+    training: int,
+    p1_definition: FighterDefinition,
+    p2_definition: FighterDefinition,
+) -> MatchState:
     return MatchState(
         seed,
-        FighterState(p1_id, P1_SPAWN_X),
-        FighterState(p2_id, P2_SPAWN_X, facing=-1),
+        FighterState(p1_id, P1_SPAWN_X, p1_definition),
+        FighterState(p2_id, P2_SPAWN_X, p2_definition, facing=-1),
         training=training,
     )

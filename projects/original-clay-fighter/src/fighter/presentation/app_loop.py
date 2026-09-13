@@ -6,6 +6,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from fighter.content.roster import display_name
+from fighter.platform.clock import FixedStepClock
 from fighter.presentation.audio import start_match_music
 from fighter.presentation.finishers import finisher_frame_paths
 from fighter.sim.bits import Action
@@ -261,7 +262,9 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
             pygame.K_KP0,
         ),
     )
+    simulation_clock = FixedStepClock()
     while running:
+        elapsed_ms = clock.tick(240)
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (
                 event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
@@ -269,6 +272,7 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                 running = False
             if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
                 game.reset()
+                simulation_clock.reset()
                 finisher_frames = []
                 finisher_frame_index = 0
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and finisher_frames:
@@ -285,35 +289,47 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                 | (Action.HEAVY if keys[group[6]] else 0)
                 | (Action.SPECIAL if keys[group[7]] else 0)
             )
-            if index == 1 and cpu:
-                opponent, bot = game.match.p1, game.match.p2
-                held = (
-                    Action.LEFT
-                    if bot.x > opponent.x + 80
-                    else Action.RIGHT
-                    if bot.x < opponent.x - 80
-                    else 0
-                )
-                if (
-                    abs(bot.x - opponent.x) < 105
-                    and not bot.attack_ticks
-                    and not bot.stun_ticks
-                    and cpu_rng.randrange(24) == 0
-                ):
-                    held |= cpu_rng.choice(
-                        (
-                            Action.LIGHT,
-                            Action.MEDIUM,
-                            Action.HEAVY,
-                            Action.SPECIAL if bot.special_charge >= 210 else Action.HEAVY,
-                        )
-                    )
-                if abs(bot.x - opponent.x) < 125 and cpu_rng.randrange(90) == 0:
-                    held |= Action.DOWN
             held_values[index] = held
-        frames = [InputFrame.from_held(previous[index], held_values[index]) for index in range(2)]
-        previous[:] = held_values
-        game.tick((frames[0], frames[1]))
+        for _ in range(simulation_clock.consume_wall_ms(elapsed_ms)):
+            for index in range(2):
+                held = held_values[index]
+                if index == 1 and cpu:
+                    opponent, bot = game.match.p1, game.match.p2
+                    held = (
+                        Action.LEFT
+                        if bot.x > opponent.x + 80
+                        else Action.RIGHT
+                        if bot.x < opponent.x - 80
+                        else 0
+                    )
+                    if (
+                        abs(bot.x - opponent.x) < 105
+                        and not bot.attack_ticks
+                        and not bot.stun_ticks
+                        and cpu_rng.randrange(24) == 0
+                    ):
+                        held |= cpu_rng.choice(
+                            (
+                                Action.LIGHT,
+                                Action.MEDIUM,
+                                Action.HEAVY,
+                                Action.SPECIAL if bot.special_charge >= 210 else Action.HEAVY,
+                            )
+                        )
+                    if abs(bot.x - opponent.x) < 125 and cpu_rng.randrange(90) == 0:
+                        held |= Action.DOWN
+                held_values[index] = held
+                frame = InputFrame.from_held(previous[index], held)
+                previous[index] = held
+                if index == 0:
+                    p1_frame = frame
+                else:
+                    p2_frame = frame
+            game.tick((p1_frame, p2_frame))
+            if on_tick:
+                on_tick(game.tick_index)
+            if game.match.phase == 2:
+                break
         m = game.match
         screen.fill((37, 33, 55))
         if stage is not None:
@@ -340,8 +356,6 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                 )
                 pygame.display.flip()
                 clock.tick(10)
-                if on_tick:
-                    on_tick(game.tick_index)
                 continue
             screen.blit(
                 font.render("RESULTS — finisher unavailable — R rematch", True, (255, 240, 190)),
@@ -402,9 +416,6 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
             (230, 680),
         )
         pygame.display.flip()
-        clock.tick(60)
-        if on_tick:
-            on_tick(game.tick_index)
     if pygame.mixer.get_init() is not None:
         pygame.mixer.music.stop()
     pygame.quit()

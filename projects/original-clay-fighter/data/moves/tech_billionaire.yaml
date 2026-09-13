@@ -1,8 +1,13 @@
 schema: fighter.moves.v1
 fighter_id: tech_billionaire
+moves:
+  light: {input: light, startup: 5, active: 2, recovery: 5, damage: 35, hitstun: 11}
+  medium: {input: medium, startup: 8, active: 2, recovery: 8, damage: 70, hitstun: 14}
+  heavy: {input: heavy, startup: 12, active: 2, recovery: 11, damage: 105, hitstun: 17}
 special:
   id: patriot_prototype_exosuit
   input: special
+  charge_requirement: 210
   charge_requirement: 210
   duration_ticks: 600
   damage_bonus: 3

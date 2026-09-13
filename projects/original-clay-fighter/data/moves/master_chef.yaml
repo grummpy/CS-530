@@ -1,12 +1,18 @@
 schema: fighter.moves.v1
 fighter_id: master_chef
+moves:
+  light: {input: light, startup: 5, active: 2, recovery: 5, damage: 35, hitstun: 11}
+  medium: {input: medium, startup: 8, active: 2, recovery: 8, damage: 70, hitstun: 14}
+  heavy: {input: heavy, startup: 12, active: 2, recovery: 11, damage: 105, hitstun: 17}
 special:
   id: kitchen_rush
   input: special
+  charge_requirement: 210
   startup: 13
   active: 5
   recovery: 21
   damage: 100
+  hitstun: 20
   hit_level: mid
   event_frame: 13
   effect: harmless_kitchen_spark

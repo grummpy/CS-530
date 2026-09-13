@@ -1,12 +1,18 @@
 schema: fighter.moves.v1
 fighter_id: rhinestone_angel
+moves:
+  light: {input: light, startup: 5, active: 2, recovery: 5, damage: 35, hitstun: 11}
+  medium: {input: medium, startup: 8, active: 2, recovery: 8, damage: 70, hitstun: 14}
+  heavy: {input: heavy, startup: 12, active: 2, recovery: 11, damage: 105, hitstun: 17}
 special:
   id: star_chord
   input: special
+  charge_requirement: 210
   startup: 12
   active: 4
   recovery: 20
   damage: 95
+  hitstun: 20
   hit_level: mid
   event_frame: 12
   effect: harmless_star_sparkle
