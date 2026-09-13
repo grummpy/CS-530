@@ -4,7 +4,7 @@
 
 Build a local, 1v1, six-fighter 2D combat prototype that launches and debugs from PyCharm. The recommended first implementation is Python 3.12+ with Pygame-ce. It validates the combat, visual pipeline, and finishers quickly while preserving a clean decision point before production.
 
-The project must use original fictional archetypes, not living people's names, faces, voices, signature costumes, slogans, brands, or biographical references. The intended comedy targets media incentives, wealth, ego, bureaucracy, tech solutionism, and attention culture rather than individuals. Finishers should be theatrical and surreal: clay deformation, confetti, paper, paint, broken props, and absurd reversals rather than realistic injury.
+The project owner selects the character and parody direction for this private prototype. Every imported or generated asset must retain documented provenance and a review record. Finishers should be theatrical and surreal: clay deformation, confetti, paper, paint, broken props, and absurd reversals rather than realistic injury.
 
 **Prototype success criteria**
 
@@ -92,7 +92,7 @@ Each move is versioned content rather than special-case code. It specifies start
 | General Gadget | Tech solutionism | Drones, prototypes, mobility, and malfunction risk | Mini drone swarm; an autonomous cart delivers a harmless pile of cardboard parts and confetti. |
 | Influence Oracle | Attention economy | Range control, follower-meter buffs, and selfie teleports | Selfie staff; a phone UI shrinks the rival into a repeatedly tapped “skip ad” button. |
 
-Every concept must pass a distance test: no recognizable likeness, real name, catchphrase, voice imitation, signature visual combination, party/campaign symbol, real brand, specific life event, or claim about a real person. Legal/content review occurs at concept, first playable, and pre-release gates.
+Every concept must have an asset provenance and content-review entry before integration. Project review occurs at concept, first playable, and pre-release gates.
 
 ### Asset and animation budgets
 

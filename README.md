@@ -8,7 +8,7 @@ game repo.
 
 | Path | What |
 |---|---|
-| `projects/original-clay-fighter/` | Papier Parade — local 2P original-fiction clay fighter |
+| `projects/original-clay-fighter/` | Papier Parade — local 2P clay fighter |
 
 Add later acts as `projects/<act-name>/`. Keep `.github/skills/` at the CS-530 root.
 
@@ -16,8 +16,8 @@ CS-530 retains course-wide documentation, skills, and shared planning artifacts 
 
 | Project | Description |
 |---|---|
-| [Original Clay Fighter: Papier Parade](projects/original-clay-fighter/) | Original fictional clay-style 2D fighting-game project and build handoff. |
+| [Clay Fighter: Papier Parade](projects/original-clay-fighter/) | Clay-style 2D fighting-game project and build handoff. |
 
 ## 2D fighter preproduction
 
-The initial game-design, technical, visual-pipeline, research, WBS, and iteration plan is available in [docs/2D_FIGHTER_EXECUTIVE_PLAN.md](docs/2D_FIGHTER_EXECUTIVE_PLAN.md). It defines an original-fictional, clay-style satirical fighting-game prototype that launches from PyCharm; it does not authorize use of real-person likenesses or third-party game assets.
+The initial game-design, technical, visual-pipeline, research, WBS, and iteration plan is available in [docs/2D_FIGHTER_EXECUTIVE_PLAN.md](docs/2D_FIGHTER_EXECUTIVE_PLAN.md). It defines a clay-style satirical fighting-game prototype that launches from PyCharm.

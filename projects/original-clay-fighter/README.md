@@ -1,11 +1,10 @@
 # Papier Parade (Original Clay Fighter)
 
-Local, two-player, original-fiction 2D clay-style fighting-game prototype.
+Local, two-player 2D clay-style fighting-game prototype.
 Python 3.12+ and Pygame-ce. Designed to run and debug from PyCharm.
 
-This is original satirical fiction. It does not depict or imitate real people,
-companies, political groups, copyrighted fighters, game assets, logos, voices,
-quotes, or trade dress.
+Character and media provenance is tracked in project documentation. The project
+owner selects the character and parody direction for this private prototype.
 
 ## Current gate
 
