@@ -23,5 +23,5 @@
     "win": {"frames": ["win_00.png"], "fps": 8},
     "lose": {"frames": ["lose_00.png"], "fps": 8}
   },
-  "status": "Runtime clip library exported and wired; Blender export is pending because no Blender executable is currently discoverable on this machine."
+  "status": "Runtime clip library exported and wired; editable Blender master is art_source/characters/mr_president/mr_president.blend."
 }

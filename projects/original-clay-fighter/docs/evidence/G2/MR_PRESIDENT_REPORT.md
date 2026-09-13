@@ -6,4 +6,4 @@ The package includes an approved concept sheet, HUD portrait, 29 transparent run
 
 Validated locally: all manifest-referenced files exist; frames are 512×512 RGBA with a non-empty transparent channel; profile, moves, and boxes load; the special damages a nearby opponent through the deterministic combat kernel; and Python source compiles.
 
-The remaining release gate is an editable Blender `.blend` export and a live Pygame-ce windowed check. Blender is not discoverable on this host, and the project runtime requires the configured Python/Pygame environment. The roster-wide finisher system is intentionally deferred, so no character-specific fatality is claimed as complete.
+Blender 5.2.1 successfully opened and rendered `art_source/characters/mr_president/mr_president.blend`; its scene metadata identifies `mr_president`, contains the `MrPresident_PoseRig`, and has 27 editable scene objects. The remaining release gate is a live Pygame-ce windowed check in the configured Python/Pygame environment. The roster-wide finisher system is intentionally deferred, so no character-specific fatality is claimed as complete.

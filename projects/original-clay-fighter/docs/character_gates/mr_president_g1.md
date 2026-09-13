@@ -17,7 +17,7 @@ Mr. President is an original, fictional elderly real-estate-showman fighter. His
 - 29 transparent 512×512 runtime frames with an explicit 256×480 ground pivot.
 - Editable deterministic source at `art_source/characters/mr_president/build_sprite_library.py`.
 - Fighter profile, move timing, hit/hurt/push boxes, HUD portrait, sprite manifest, roster entry, and renderer routing.
-- A Blender `.blend` export remains pending: the host currently has no discoverable Blender executable. The source preserves clip names and pivot for a later Blender replacement.
+- Native Blender 5.2.1 master scene at `art_source/characters/mr_president/mr_president.blend`, with named editable clay components, a pose-rig contract, studio camera, and lights. The deterministic sprite source preserves matching clip names and pivot.
 - Finisher remains deferred until the roster-wide finisher state, camera, skip, and guaranteed results cleanup exist.
 
 ## Acceptance notes
