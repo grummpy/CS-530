@@ -14,11 +14,13 @@ class FighterState:
     hit_this_attack: bool = False
     armor_charge: int = 0
     armor_ticks: int = 0
+    special_charge: int = 0
+    blocking: bool = False
 
     def snapshot(self) -> dict[str, int | str | bool]:
         return {"id": self.fighter_id, "x": self.x, "health": self.health, "facing": self.facing,
                 "attack_ticks": self.attack_ticks, "stun_ticks": self.stun_ticks, "attack_kind": self.attack_kind,
-                "hit": self.hit_this_attack, "armor_charge": self.armor_charge, "armor_ticks": self.armor_ticks}
+                "hit": self.hit_this_attack, "armor_charge": self.armor_charge, "armor_ticks": self.armor_ticks, "special_charge": self.special_charge, "blocking": self.blocking}
 
 @dataclass(slots=True)
 class MatchState:
@@ -29,9 +31,10 @@ class MatchState:
     phase: int = 1
     training: int = 0
     events: list[str] = field(default_factory=list)
+    round_ticks: int = 99 * 60
     def snapshot(self) -> dict[str, object]:
         return {"seed": self.seed, "tick": self.tick, "phase": self.phase, "training": self.training,
-                "p1": self.p1.snapshot(), "p2": self.p2.snapshot()}
+                "p1": self.p1.snapshot(), "p2": self.p2.snapshot(), "round_ticks": self.round_ticks}
 
 def initial_match(seed: int, p1_id: str, p2_id: str, training: int) -> MatchState:
     return MatchState(seed, FighterState(p1_id, P1_SPAWN_X), FighterState(p2_id, P2_SPAWN_X, facing=-1), training=training)
