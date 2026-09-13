@@ -22,5 +22,10 @@ stage validation, and cached transforms remain presentation-only. See
 `evidence/G5/FIGHTER_FRAME_SCENE_REPORT_2026-09-13.md` for commit-pinned
 implementation and actual validation results.
 
-Cycle 6 controls, settings, and onboarding awaits approval. See
-`CYCLE_6_CONTROLS_SETTINGS_BRIEFING.md`.
+Cycle 6 controls, settings, and onboarding is complete. The presentation shell
+routes keyboard and Pygame controller input through semantic actions before
+creating simulation `InputFrame`s, tracks assignment/hot-plug lifecycle,
+pauses safely on focus/device loss, and provides keyboard/controller-operated
+title, selection, settings, training, and move-list views. Versioned,
+allowlisted settings are written atomically in per-user configuration storage.
+See `evidence/G6/CONTROLS_SETTINGS_REPORT_2026-09-13.md`.
