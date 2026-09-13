@@ -1,0 +1,6 @@
+schema: fighter.stage.v1
+id: wellness_mall_studio
+version: 1
+display_name: Wellness Mall Studio
+width: 1280
+ground_y: 600

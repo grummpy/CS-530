@@ -1,0 +1,8 @@
+schema: fighter.profile.v1
+id: influence_oracle
+version: 1
+display_name: Influence Oracle
+palette: [violet, hot_pink, aqua, white]
+silhouette: modular_ui_panels
+moves: influence_oracle
+finisher: terms_accepted

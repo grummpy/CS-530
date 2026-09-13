@@ -1,0 +1,6 @@
+schema: fighter.stage.v1
+id: test_grid
+version: 1
+display_name: Test Grid
+width: 1280
+ground_y: 600

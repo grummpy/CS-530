@@ -1,0 +1,8 @@
+schema: fighter.profile.v1
+id: general_gadget
+version: 1
+display_name: General Gadget
+palette: [graphite, orange, cyan, cardboard_brown]
+silhouette: angular_jumpsuit
+moves: general_gadget
+finisher: autonomous_delivery

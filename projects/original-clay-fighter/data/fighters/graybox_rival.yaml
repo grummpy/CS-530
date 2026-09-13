@@ -1,0 +1,8 @@
+schema: fighter.profile.v1
+id: graybox_rival
+version: 1
+display_name: Graybox Rival
+palette: [graphite, invoice_white]
+silhouette: rectangle
+moves: graybox_rival
+finisher: none

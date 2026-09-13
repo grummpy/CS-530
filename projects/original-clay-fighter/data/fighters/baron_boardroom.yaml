@@ -1,0 +1,8 @@
+schema: fighter.profile.v1
+id: baron_boardroom
+version: 1
+display_name: Baron Boardroom
+palette: [charcoal, dull_gold, invoice_white, ledger_green]
+silhouette: padded_pinstripe_rectangle
+moves: baron_boardroom
+finisher: quarterly_reckoning

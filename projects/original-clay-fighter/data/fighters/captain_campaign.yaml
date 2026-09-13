@@ -1,0 +1,9 @@
+schema: fighter.profile.v1
+id: captain_campaign
+version: 1
+display_name: Captain Campaign
+palette: [brick_red, parchment_cream, faded_teal, brass]
+silhouette: wide_triangular_podium
+moves: captain_campaign
+finisher: approval_rating_avalanche
+stage_default: municipal_parade_depot
