@@ -4,6 +4,7 @@ from pathlib import Path
 from fighter.sim.bits import Action
 from fighter.sim.input_frame import InputFrame
 from fighter.sim.kernel import SessionKernel
+from fighter.presentation.audio import start_match_music
 
 
 def _load_stage(pygame: object) -> object | None:
@@ -19,6 +20,7 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
     import pygame
     pygame.init(); screen = pygame.display.set_mode((1280, 720)); pygame.display.set_caption(title); clock = pygame.time.Clock(); font = pygame.font.Font(None, 28)
     stage = _load_stage(pygame)
+    start_match_music(pygame, seed)
     game = SessionKernel(seed=seed, p1_id="captain_campaign", p2_id="baron_boardroom"); previous = [0, 0]; running = True
     bindings = ((pygame.K_a, pygame.K_d, pygame.K_w, pygame.K_s, pygame.K_f, pygame.K_g, pygame.K_h), (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_KP1, pygame.K_KP2, pygame.K_KP3))
     while running:
@@ -36,4 +38,5 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
         pygame.draw.rect(screen,(80,20,25),(40,35,500,24)); pygame.draw.rect(screen,(65,180,90),(40,35,m.p1.health//2,24)); pygame.draw.rect(screen,(80,20,25),(740,35,500,24)); pygame.draw.rect(screen,(65,180,90),(1240-m.p2.health//2,35,m.p2.health//2,24))
         screen.blit(font.render("P1 A/D + F/G/H    P2 arrows + keypad 1/2/3    R reset    Esc quit", True, (245,245,245)),(260,680)); pygame.display.flip(); clock.tick(60)
         if on_tick: on_tick(game.tick_index)
+    pygame.mixer.music.stop()
     pygame.quit(); return 0
