@@ -1,0 +1,9 @@
+schema: fighter.boxes.v1
+fighter_id: tech_billionaire
+push_box: {x: -32, y: -160, w: 64, h: 160}
+hurt_box: {x: -38, y: -162, w: 76, h: 154}
+moves:
+  light: {active_frames: [6, 7], hit_box: {x: 20, y: -136, w: 78, h: 34}}
+  medium: {active_frames: [9, 10], hit_box: {x: 20, y: -142, w: 96, h: 44}}
+  heavy: {active_frames: [13, 14], hit_box: {x: 24, y: -154, w: 118, h: 56}}
+  patriot_prototype_exosuit: {active_frames: [14, 17], hit_box: {x: 14, y: -150, w: 132, h: 70}}

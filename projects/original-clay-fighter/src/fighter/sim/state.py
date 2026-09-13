@@ -12,11 +12,13 @@ class FighterState:
     stun_ticks: int = 0
     attack_kind: int = 0
     hit_this_attack: bool = False
+    armor_charge: int = 0
+    armor_ticks: int = 0
 
     def snapshot(self) -> dict[str, int | str | bool]:
         return {"id": self.fighter_id, "x": self.x, "health": self.health, "facing": self.facing,
                 "attack_ticks": self.attack_ticks, "stun_ticks": self.stun_ticks, "attack_kind": self.attack_kind,
-                "hit": self.hit_this_attack}
+                "hit": self.hit_this_attack, "armor_charge": self.armor_charge, "armor_ticks": self.armor_ticks}
 
 @dataclass(slots=True)
 class MatchState:

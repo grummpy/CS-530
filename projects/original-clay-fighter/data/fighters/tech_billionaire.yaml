@@ -1,0 +1,11 @@
+schema: fighter.profile.v1
+id: tech_billionaire
+version: 1
+display_name: The Tech Billionaire
+palette: [corporate_black, heather_gray, indigo, graphite, brass, teal]
+silhouette: layered_shirt_cybernetic_wrist_controller
+runtime_portrait: assets/characters/tech_billionaire/portrait.png
+moves: tech_billionaire
+special: patriot_prototype_exosuit
+armor_mode: {charge_from_damage: 210, duration_ticks: 600, power_bonus: 3}
+stage_default: electric_assembly_hall

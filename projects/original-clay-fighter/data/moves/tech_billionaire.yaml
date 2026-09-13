@@ -1,0 +1,11 @@
+schema: fighter.moves.v1
+fighter_id: tech_billionaire
+special:
+  id: patriot_prototype_exosuit
+  input: special
+  charge_requirement: 210
+  duration_ticks: 600
+  damage_bonus: 3
+  event_frame: 14
+  effect: teal_armor_beacon
+  note: Absorb 210 damage, then activate the original Patriot Prototype Exosuit for ten seconds; all attack hits gain +3 damage while active.

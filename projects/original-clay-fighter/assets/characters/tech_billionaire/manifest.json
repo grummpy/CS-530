@@ -1,0 +1,11 @@
+{
+  "schema": "fighter.sprite-manifest.v1",
+  "fighter_id": "tech_billionaire",
+  "pivot": {"x": 256, "y": 480},
+  "source": "sprites/*.png",
+  "usage": "Transparent Blender runtime frames. Armor clips are activated by the deterministic armor-mode state.",
+  "clips": {
+    "idle": {"frames": ["idle_00.png", "idle_01.png", "idle_02.png", "idle_03.png"], "fps": 8}, "walk": {"frames": ["walk_00.png", "walk_01.png", "walk_02.png", "walk_03.png"], "fps": 12}, "run": {"frames": ["run_00.png", "run_01.png", "run_02.png", "run_03.png"], "fps": 12}, "jump": {"frames": ["jump_00.png", "jump_01.png", "jump_02.png", "jump_03.png"], "fps": 12}, "crouch": {"frames": ["crouch_00.png"], "fps": 8}, "block_high": {"frames": ["block_high_00.png"], "fps": 8}, "block_low": {"frames": ["block_low_00.png"], "fps": 8}, "light": {"frames": ["light_00.png"], "fps": 12}, "medium": {"frames": ["medium_00.png"], "fps": 12}, "heavy": {"frames": ["heavy_00.png"], "fps": 12}, "exosuit_call": {"frames": ["exosuit_call_00.png"], "fps": 12}, "armor_idle": {"frames": ["armor_idle_00.png", "armor_idle_01.png", "armor_idle_02.png", "armor_idle_03.png"], "fps": 8}, "armor_punch": {"frames": ["armor_punch_00.png"], "fps": 12}, "armor_kick": {"frames": ["armor_kick_00.png"], "fps": 12}, "hit": {"frames": ["hit_00.png"], "fps": 12}, "knockdown": {"frames": ["knockdown_00.png"], "fps": 8}, "wake": {"frames": ["wake_00.png"], "fps": 8}, "intro": {"frames": ["intro_00.png"], "fps": 8}, "win": {"frames": ["win_00.png"], "fps": 8}, "lose": {"frames": ["lose_00.png"], "fps": 8}
+  },
+  "status": "Blender master and armor-mode clip library are authored for runtime integration."
+}
