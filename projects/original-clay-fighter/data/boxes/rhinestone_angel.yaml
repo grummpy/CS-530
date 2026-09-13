@@ -1,0 +1,9 @@
+schema: fighter.boxes.v1
+fighter_id: rhinestone_angel
+push_box: {x: -28, y: -160, w: 56, h: 160}
+hurt_box: {x: -34, y: -160, w: 68, h: 150}
+moves:
+  light: {active_frames: [6, 7], hit_box: {x: 18, y: -135, w: 74, h: 34}}
+  medium: {active_frames: [9, 10], hit_box: {x: 18, y: -142, w: 96, h: 44}}
+  heavy: {active_frames: [13, 14], hit_box: {x: 20, y: -155, w: 118, h: 56}}
+  star_chord: {active_frames: [12, 15], hit_box: {x: 16, y: -150, w: 128, h: 68}}

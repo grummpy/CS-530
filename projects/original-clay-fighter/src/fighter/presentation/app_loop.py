@@ -1,5 +1,6 @@
 """Simple local-versus visual shell with keyboard controls."""
 from collections.abc import Callable
+import json
 from pathlib import Path
 from fighter.sim.bits import Action
 from fighter.sim.input_frame import InputFrame
@@ -25,6 +26,22 @@ def _load_fighter_sprite(pygame: object, fighter_id: str) -> object | None:
         return None
 
 
+def _load_fighter_clips(pygame: object, fighter_id: str) -> dict[str, list[object]]:
+    root = Path(__file__).resolve().parents[3] / "assets" / "characters" / fighter_id
+    try:
+        manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
+        return {name: [pygame.transform.smoothscale(pygame.image.load((root / "sprites" / frame).as_posix()).convert_alpha(), (320, 320)) for frame in clip["frames"]] for name, clip in manifest["clips"].items()}
+    except (OSError, ValueError, KeyError, pygame.error):
+        return {}
+
+
+def _active_clip(fighter: object) -> str:
+    if fighter.stun_ticks: return "hit"
+    if fighter.attack_ticks:
+        return {1: "light", 2: "medium", 3: "heavy", 4: "star_chord"}.get(fighter.attack_kind, "idle")
+    return "idle"
+
+
 def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None = None) -> int:
     import pygame
     pygame.init(); screen = pygame.display.set_mode((1280, 720)); pygame.display.set_caption(title); clock = pygame.time.Clock(); font = pygame.font.Font(None, 28)
@@ -32,6 +49,7 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
     start_match_music(pygame, seed)
     game = SessionKernel(seed=seed, p1_id="rhinestone_angel", p2_id="baron_boardroom"); previous = [0, 0]; running = True
     fighter_sprites = {fighter_id: _load_fighter_sprite(pygame, fighter_id) for fighter_id in (game.match.p1.fighter_id, game.match.p2.fighter_id)}
+    fighter_clips = {fighter_id: _load_fighter_clips(pygame, fighter_id) for fighter_id in (game.match.p1.fighter_id, game.match.p2.fighter_id)}
     bindings = ((pygame.K_a, pygame.K_d, pygame.K_w, pygame.K_s, pygame.K_f, pygame.K_g, pygame.K_h, pygame.K_j), (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_KP1, pygame.K_KP2, pygame.K_KP3, pygame.K_KP0))
     while running:
         for event in pygame.event.get():
@@ -45,7 +63,12 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
         if stage is not None: screen.blit(stage, (0, 0))
         else: pygame.draw.rect(screen, (224, 200, 134), (0, 600, 1280, 120))
         for f, color in ((m.p1,(196,75,67)), (m.p2,(60,150,182))):
-            pygame.draw.rect(screen, color, (f.x-35,440,70,160), border_radius=18)
+            frames = fighter_clips.get(f.fighter_id, {}).get(_active_clip(f), [])
+            if frames:
+                frame = frames[(m.tick // 4) % len(frames)]
+                screen.blit(pygame.transform.flip(frame, f.facing < 0, False), (f.x - 160, 300))
+            else:
+                pygame.draw.rect(screen, color, (f.x-35,440,70,160), border_radius=18)
         portrait = fighter_sprites.get(m.p1.fighter_id)
         if portrait is not None:
             screen.blit(pygame.transform.smoothscale(portrait, (80, 120)), (18, 70))

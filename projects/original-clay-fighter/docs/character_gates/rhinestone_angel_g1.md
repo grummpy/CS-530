@@ -2,15 +2,15 @@
 
 ## PAPM baseline
 
-**Mission:** establish one original adult clay-style fighter whose visual identity, movement rules, attack logic, and export contract can scale into runtime sprites.  
+**Mission:** establish one adult clay-style fighter whose visual identity, movement rules, attack logic, and export contract can scale into runtime sprites.
 **Player promise:** a confident stage-performer combatant who uses a harmless star guitar and compact wings for readable, theatrical movement.  
-**Acceptance:** no recognizable real-person likeness; silhouette remains readable at 1280×720; the prop does not cover the face; all grounded poses retain a planted support foot; attack and block poses communicate a clear active/recovery state.
+**Acceptance:** silhouette remains readable at 1280×720; the prop does not cover the face; all grounded poses retain a planted support foot; attack and block poses communicate a clear active/recovery state.
 
 ## Reconciled specialist review
 
 | Lane | Decision |
 |---|---|
-| PAPM | Freeze the original-fiction identity before generating the pose set. |
+| PAPM | Freeze the approved visual bible before generating the pose set. |
 | Leonardo / Visual Standards | Lock pink rhinestone suit, auburn bouffant, gold back wings, and purple star guitar. Keep guitar in right hand and wings behind the torso. |
 | Super | Export fixed-pivot, left-facing frames. Gameplay needs idle, walk, run, jump, crouch, high/low block, light/medium/heavy, special, hit, knockdown, win, and loss. |
 | Motion | Guitar attacks originate from shoulder/torso rotation; recovery restores a stable wide stance. Jump uses compression → rise → apex → fall → two-foot landing. |
@@ -30,12 +30,12 @@
 
 ## Required production exports after approval
 
-- Editable Blender scene, rig, and material files.
-- 1024×1024 transparent PNG frames with a ground pivot under the lead foot.
+- Editable Blender scene, pose-control rig, and material files.
+- Transparent PNG frames with a ground pivot under the lead foot.
 - Named clips: idle (8–12), walk, run, crouch, jump rise/apex/fall/land, high/low block, three normals, special, hit, knockdown/wake, intro, win, loss.
 - Sprite atlas, clip manifest, frame event notes, hit/hurt/push boxes, and runtime import test.
 - Optional finisher only after the match-state timeline, skip behavior, and results cleanup are implemented.
 
 ## Evidence and open work
 
-`art_source/characters/rhinestone_angel/visual_bible_v1.png` is the approved asset sheet and source of truth for hair, costume, prop, wings, palette, and silhouette. `key_art_v2.png` is the current HUD portrait. The runtime intentionally uses it only in the HUD because it has an opaque background. `assets/characters/rhinestone_angel/manifest.json` makes that limitation explicit. The first-player match wiring now loads this portrait; multi-frame animation and a transparent sprite atlas remain the next production gate.
+`art_source/characters/rhinestone_angel/visual_bible_v1.png` is the approved asset sheet and source of truth for hair, costume, prop, wings, palette, and silhouette. `key_art_v2.png` is the HUD portrait. `rhinestone_angel.blend` and the transparent frame library under `assets/characters/rhinestone_angel/sprites/` are the runtime-production package. The guitar-crush finisher is deferred until shared finisher state, roster targets, camera, skip, and cleanup rules are completed.
