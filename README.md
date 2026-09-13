@@ -8,7 +8,11 @@ Project-specific setup and usage instructions will be added here as the implemen
 
 ## Repository layout
 
-The repository is intentionally starting with a minimal structure. Add source code, tests, documentation, and supporting assets as the project requirements become clear.
+CS-530 retains course-wide documentation, skills, and shared planning artifacts at the root. Independent deliverables live in [`projects/`](projects/).
+
+| Project | Description |
+|---|---|
+| [Original Clay Fighter: Papier Parade](projects/original-clay-fighter/) | Original fictional clay-style 2D fighting-game project and build handoff. |
 
 ## 2D fighter preproduction
 
