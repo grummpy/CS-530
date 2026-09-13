@@ -1,0 +1,7 @@
+schema: fighter.stage.v1
+id: electric_assembly_hall
+version: 1
+display_name: Electric Assembly Hall
+width: 1280
+ground_y: 600
+runtime_background: assets/stages/electric_assembly_hall_concept.png

@@ -1,0 +1,7 @@
+schema: fighter.stage.v1
+id: executive_lawn
+version: 1
+display_name: Executive Lawn
+width: 1280
+ground_y: 600
+runtime_background: assets/stages/executive_lawn_concept.png
