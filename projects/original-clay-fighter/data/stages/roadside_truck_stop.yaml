@@ -1,0 +1,7 @@
+schema: fighter.stage.v1
+id: roadside_truck_stop
+version: 1
+display_name: Roadside Truck Stop
+width: 1280
+ground_y: 600
+runtime_background: assets/stages/roadside_truck_stop_concept.png

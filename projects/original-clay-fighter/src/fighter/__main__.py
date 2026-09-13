@@ -6,6 +6,7 @@ import sys
 
 from fighter.platform.app import headless_main, main
 
+
 def _dispatch() -> int:
     if len(sys.argv) > 1 and sys.argv[1] == "headless":
         sys.argv = [sys.argv[0], "--headless", *sys.argv[2:]]
@@ -16,4 +17,4 @@ if __name__ == "__main__":
     raise SystemExit(_dispatch())
 
 
-__all__ = ["main", "headless_main"]
+__all__ = ["headless_main", "main"]

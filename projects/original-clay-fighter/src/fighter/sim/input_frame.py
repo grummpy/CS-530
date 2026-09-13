@@ -1,5 +1,7 @@
 """Immutable, per-tick controller state."""
+
 from dataclasses import dataclass
+
 
 @dataclass(frozen=True, slots=True)
 class InputFrame:

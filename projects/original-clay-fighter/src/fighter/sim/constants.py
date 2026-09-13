@@ -1,5 +1,7 @@
 """Integer-space stage and combat constants. Units are pixels and ticks."""
+
 from __future__ import annotations
+
 STAGE_WIDTH = 1280
 STAGE_HEIGHT = 720
 GROUND_Y = 600

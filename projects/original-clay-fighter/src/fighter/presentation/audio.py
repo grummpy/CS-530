@@ -1,4 +1,5 @@
 """Optional, non-authoritative match music playback."""
+
 from pathlib import Path
 
 MUSIC_TRACKS = (
