@@ -1,0 +1,6 @@
+schema: finisher.timeline.v1
+fighter_id: rhinestone_angel
+id: star_guitar_clay_crush
+duration_frames: 30
+skip_allowed: true
+variants: {mr_president: five_star_crush, tech_billionaire: five_star_crush, master_chef: five_star_crush}

@@ -1,0 +1,6 @@
+schema: finisher.timeline.v1
+fighter_id: master_chef
+id: kitchen_rush_finale
+duration_frames: 30
+skip_allowed: true
+variants: {rhinestone_angel: star_sashimi, mr_president: executive_filet, tech_billionaire: circuit_carpaccio}

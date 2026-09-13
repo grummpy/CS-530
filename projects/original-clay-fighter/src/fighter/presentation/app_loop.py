@@ -6,6 +6,7 @@ from fighter.sim.bits import Action
 from fighter.sim.input_frame import InputFrame
 from fighter.sim.kernel import SessionKernel
 from fighter.presentation.audio import start_match_music
+from fighter.presentation.finishers import finisher_frame_paths
 
 
 def _load_stage(pygame: object) -> object | None:
@@ -52,13 +53,15 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
     stage = _load_stage(pygame)
     start_match_music(pygame, seed)
     game = SessionKernel(seed=seed, p1_id="rhinestone_angel", p2_id="master_chef"); previous = [0, 0]; running = True
+    finisher_frames: list[object] = []; finisher_frame_index = 0
     fighter_sprites = {fighter_id: _load_fighter_sprite(pygame, fighter_id) for fighter_id in (game.match.p1.fighter_id, game.match.p2.fighter_id)}
     fighter_clips = {fighter_id: _load_fighter_clips(pygame, fighter_id) for fighter_id in (game.match.p1.fighter_id, game.match.p2.fighter_id)}
     bindings = ((pygame.K_a, pygame.K_d, pygame.K_w, pygame.K_s, pygame.K_f, pygame.K_g, pygame.K_h, pygame.K_j), (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_KP1, pygame.K_KP2, pygame.K_KP3, pygame.K_KP0))
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE): running = False
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_r: game.reset()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_r: game.reset(); finisher_frames = []; finisher_frame_index = 0
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and finisher_frames: finisher_frame_index = len(finisher_frames) - 1
         keys = pygame.key.get_pressed(); frames=[]
         for index, group in enumerate(bindings):
             held = (Action.LEFT if keys[group[0]] else 0) | (Action.RIGHT if keys[group[1]] else 0) | (Action.LIGHT if keys[group[4]] else 0) | (Action.MEDIUM if keys[group[5]] else 0) | (Action.HEAVY if keys[group[6]] else 0) | (Action.SPECIAL if keys[group[7]] else 0)
@@ -66,6 +69,15 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
         game.tick((frames[0], frames[1])); m=game.match; screen.fill((37, 33, 55))
         if stage is not None: screen.blit(stage, (0, 0))
         else: pygame.draw.rect(screen, (224, 200, 134), (0, 600, 1280, 120))
+        if m.phase == 2:
+            if not finisher_frames:
+                winner, loser = (m.p1, m.p2) if m.p2.health == 0 else (m.p2, m.p1)
+                finisher_frames = [pygame.transform.smoothscale(pygame.image.load(path.as_posix()).convert(), (1280, 720)) for path in finisher_frame_paths(winner.fighter_id, loser.fighter_id)]
+            if finisher_frames:
+                screen.blit(finisher_frames[min(finisher_frame_index, len(finisher_frames) - 1)], (0, 0)); finisher_frame_index = min(finisher_frame_index + 1, len(finisher_frames) - 1)
+                screen.blit(font.render("FINISHER — Space skips — R resets", True, (255, 240, 190)), (465, 680)); pygame.display.flip(); clock.tick(10)
+                if on_tick: on_tick(game.tick_index)
+                continue
         for f, color in ((m.p1,(196,75,67)), (m.p2,(60,150,182))):
             frames = fighter_clips.get(f.fighter_id, {}).get(_active_clip(f), [])
             if frames:

@@ -1,0 +1,6 @@
+schema: finisher.timeline.v1
+fighter_id: mr_president
+id: rotary_phone_airshow
+duration_frames: 30
+skip_allowed: true
+variants: {rhinestone_angel: starburst_bomb, tech_billionaire: circuit_bomb, master_chef: kitchen_bomb}

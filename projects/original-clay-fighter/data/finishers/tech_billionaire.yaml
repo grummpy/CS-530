@@ -1,0 +1,6 @@
+schema: finisher.timeline.v1
+fighter_id: tech_billionaire
+id: satellite_orb_protocol
+duration_frames: 30
+skip_allowed: true
+variants: {rhinestone_angel: orb_pop, mr_president: orb_tumble, master_chef: orb_stomp}
