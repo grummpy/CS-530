@@ -4,6 +4,7 @@ version: 1
 display_name: Rhinestone Angel
 palette: [rhinestone_pink, auburn, antique_gold, star_guitar_purple]
 silhouette: folded_wings_and_star_guitar
+runtime_portrait: assets/characters/rhinestone_angel/portrait.png
 moves: rhinestone_angel
 special: star_chord
 stage_default: roadside_truck_stop

@@ -45,9 +45,10 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
         if stage is not None: screen.blit(stage, (0, 0))
         else: pygame.draw.rect(screen, (224, 200, 134), (0, 600, 1280, 120))
         for f, color in ((m.p1,(196,75,67)), (m.p2,(60,150,182))):
-            sprite = fighter_sprites.get(f.fighter_id)
-            if sprite is None: pygame.draw.rect(screen, color, (f.x-35,440,70,160), border_radius=18)
-            else: screen.blit(sprite, (f.x-105, 280))
+            pygame.draw.rect(screen, color, (f.x-35,440,70,160), border_radius=18)
+        portrait = fighter_sprites.get(m.p1.fighter_id)
+        if portrait is not None:
+            screen.blit(pygame.transform.smoothscale(portrait, (80, 120)), (18, 70))
         pygame.draw.rect(screen,(80,20,25),(40,35,500,24)); pygame.draw.rect(screen,(65,180,90),(40,35,m.p1.health//2,24)); pygame.draw.rect(screen,(80,20,25),(740,35,500,24)); pygame.draw.rect(screen,(65,180,90),(1240-m.p2.health//2,35,m.p2.health//2,24))
         screen.blit(font.render("P1 A/D + F/G/H/J    P2 arrows + keypad 1/2/3/0    R reset    Esc quit", True, (245,245,245)),(230,680)); pygame.display.flip(); clock.tick(60)
         if on_tick: on_tick(game.tick_index)

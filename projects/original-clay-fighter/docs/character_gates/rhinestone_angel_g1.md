@@ -38,4 +38,4 @@
 
 ## Evidence and open work
 
-`art_source/characters/rhinestone_angel/key_art_v2.png` is the current reviewed key art. It has a non-transparent background despite the generation request, so the runtime displays it as an opaque portrait render. `assets/characters/rhinestone_angel/manifest.json` makes that limitation explicit. The first-player match wiring now loads this portrait; multi-frame animation and a transparent sprite atlas remain the next production gate.
+`art_source/characters/rhinestone_angel/visual_bible_v1.png` is the approved asset sheet and source of truth for hair, costume, prop, wings, palette, and silhouette. `key_art_v2.png` is the current HUD portrait. The runtime intentionally uses it only in the HUD because it has an opaque background. `assets/characters/rhinestone_angel/manifest.json` makes that limitation explicit. The first-player match wiring now loads this portrait; multi-frame animation and a transparent sprite atlas remain the next production gate.
