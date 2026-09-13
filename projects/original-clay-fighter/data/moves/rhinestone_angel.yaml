@@ -1,0 +1,13 @@
+schema: fighter.moves.v1
+fighter_id: rhinestone_angel
+special:
+  id: star_chord
+  input: special
+  startup: 12
+  active: 4
+  recovery: 20
+  damage: 95
+  hit_level: mid
+  event_frame: 12
+  effect: harmless_star_sparkle
+  note: Two-handed shoulder-driven guitar strike; feet remain planted through recovery.

@@ -18,7 +18,7 @@ def _move(f: FighterState, held: int) -> None:
 
 def _start_attack(f: FighterState, pressed: int) -> None:
     if f.stun_ticks or f.attack_ticks: return
-    for action, kind, length in ((Action.LIGHT, 1, 12), (Action.MEDIUM, 2, 18), (Action.HEAVY, 3, 25), (Action.THROW, 4, 16)):
+    for action, kind, length in ((Action.LIGHT, 1, 12), (Action.MEDIUM, 2, 18), (Action.HEAVY, 3, 25), (Action.SPECIAL, 4, 28), (Action.THROW, 4, 16)):
         if pressed & action:
             f.attack_kind, f.attack_ticks, f.hit_this_attack = kind, length, False
             return

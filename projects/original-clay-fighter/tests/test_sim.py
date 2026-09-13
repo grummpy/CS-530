@@ -12,3 +12,9 @@ def test_attack_damages_close_opponent():
     assert game.match.p2.health < 1000
 
 def test_missing_finisher_is_explicit(): assert load_finisher("captain_campaign") is None
+
+def test_special_damages_close_opponent():
+    game = SessionKernel(); game.match.p2.x = game.match.p1.x + 50
+    game.tick((InputFrame.from_held(0, Action.SPECIAL), InputFrame()))
+    for _ in range(28): game.tick()
+    assert game.match.p2.health < 1000

@@ -1,0 +1,20 @@
+{
+  "schema": "fighter.sprite-manifest.v1",
+  "fighter_id": "rhinestone_angel",
+  "pivot": {"x": 512, "y": 1000},
+  "source": "portrait.png",
+  "clips": {
+    "idle": {"frames": [0], "fps": 8},
+    "walk": {"frames": [0], "fps": 12},
+    "run": {"frames": [0], "fps": 12},
+    "jump": {"frames": [0], "fps": 12},
+    "crouch": {"frames": [0], "fps": 8},
+    "block_high": {"frames": [0], "fps": 8},
+    "block_low": {"frames": [0], "fps": 8},
+    "light": {"frames": [0], "fps": 12},
+    "medium": {"frames": [0], "fps": 12},
+    "heavy": {"frames": [0], "fps": 12},
+    "star_chord": {"frames": [0], "fps": 12}
+  },
+  "status": "single rendered key pose wired to runtime; multi-frame clips pending Blender rig export"
+}
