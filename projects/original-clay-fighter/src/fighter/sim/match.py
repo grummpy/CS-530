@@ -20,6 +20,12 @@ from fighter.sim.constants import (
     WALK_SPEED,
 )
 from fighter.sim.enums import FighterMode, MatchPhase, ResultReason
+from fighter.sim.events import (
+    PRESENTATION_EVENT_VERSION,
+    PresentationEvent,
+    PresentationKind,
+    PresentationPayload,
+)
 from fighter.sim.input_frame import InputFrame
 from fighter.sim.moves import HitLevel, MoveDefinition
 from fighter.sim.state import FighterState, MatchState, ResultPayload, initial_match
@@ -34,6 +40,7 @@ def reset_round(match: MatchState) -> None:
     fresh = new_match(match.seed, match.p1.fighter_id, match.p2.fighter_id, match.training)
     match.p1, match.p2, match.tick, match.phase, match.events, match.round_ticks, match.result = (
         fresh.p1, fresh.p2, fresh.tick, fresh.phase, [], fresh.round_ticks, None)
+    match.presentation_events = []
 
 
 def _push_interval(fighter: FighterState) -> tuple[int, int]:
@@ -164,9 +171,22 @@ def _damage(defender: FighterState, amount: int) -> None:
     defender.special_charge = min(3000, defender.special_charge + amount)
 
 
+def _present(
+    match: MatchState, kind: PresentationKind, actor: int | None, target: int | None,
+    fighter: FighterState, move: str | None = None, strength: int = 0,
+    result: ResultReason | None = None,
+) -> None:
+    """Append an ID-addressable event; this never participates in simulation state."""
+    match.presentation_events.append(PresentationEvent(
+        PRESENTATION_EVENT_VERSION, match.next_presentation_event_id, match.tick, kind, actor, target,
+        (fighter.x, fighter.y), PresentationPayload(move, strength, result),
+    ))
+    match.next_presentation_event_id += 1
+
+
 def _resolve_strike(attacker: FighterState, defender: FighterState, definition: FighterDefinition,
                     defender_definition: FighterDefinition, defender_input: InputFrame,
-                    events: list[str]) -> None:
+                    events: list[str], match: MatchState, actor: int, target: int) -> None:
     if attacker.mode is not FighterMode.ATTACK or attacker.hit_this_attack:
         return
     move = definition.moves[attacker.attack_move]
@@ -179,6 +199,7 @@ def _resolve_strike(attacker: FighterState, defender: FighterState, definition: 
         _damage(defender, max(1, damage // 3))
         defender.mode, defender.stun_ticks, defender.blocking = FighterMode.BLOCKSTUN, move.blockstun, True
         attacker.attack_confirm, events[:] = "block", [*events, "block"]
+        _present(match, "block", actor, target, defender, move.move_id, damage)
     else:
         _damage(defender, damage)
         defender.stun_ticks, defender.combo_count = move.hitstun, defender.combo_count + 1
@@ -187,6 +208,7 @@ def _resolve_strike(attacker: FighterState, defender: FighterState, definition: 
         else:
             defender.mode = FighterMode.HITSTUN
         attacker.attack_confirm, events[:] = "hit", [*events, "hit"]
+        _present(match, "hit", actor, target, defender, move.move_id, damage)
     attacker.hit_this_attack = True
 
 
@@ -196,7 +218,7 @@ def _throw_active(fighter: FighterState) -> bool:
 
 
 def _resolve_throw(attacker: FighterState, defender: FighterState, defender_input: InputFrame,
-                   events: list[str]) -> None:
+                   events: list[str], match: MatchState, actor: int, target: int) -> None:
     if attacker.mode is not FighterMode.THROW or attacker.hit_this_attack or not _throw_active(attacker):
         return
     if defender.airborne or defender.mode in {FighterMode.KNOCKDOWN_SOFT, FighterMode.KNOCKDOWN_HARD,
@@ -208,15 +230,17 @@ def _resolve_throw(attacker: FighterState, defender: FighterState, defender_inpu
         attacker.attack_ticks = defender.attack_ticks = 0
         attacker.mode = defender.mode = FighterMode.NEUTRAL
         events.append("throw_tech")
+        _present(match, "throw_tech", actor, target, defender)
     else:
         _damage(defender, RULES.throw_damage)
         defender.mode, defender.state_ticks, defender.combo_count = (
             FighterMode.KNOCKDOWN_SOFT, RULES.throw_knockdown_ticks, 0)
         events.append("throw")
+        _present(match, "throw", actor, target, defender, "__throw__", RULES.throw_damage)
     attacker.hit_this_attack = True
 
 
-def _advance_states(fighter: FighterState, events: list[str]) -> None:
+def _advance_states(fighter: FighterState, events: list[str], match: MatchState, player: int) -> None:
     if fighter.mode is FighterMode.JUMP_STARTUP:
         fighter.state_ticks -= 1
         if fighter.state_ticks == 0:
@@ -228,6 +252,7 @@ def _advance_states(fighter: FighterState, events: list[str]) -> None:
         if fighter.y >= GROUND_Y:
             fighter.y, fighter.vy, fighter.mode, fighter.state_ticks = GROUND_Y, 0, FighterMode.LANDING, RULES.landing_ticks
             events.append("land")
+            _present(match, "land", player, None, fighter)
     elif fighter.mode in {FighterMode.LANDING, FighterMode.KNOCKDOWN_SOFT, FighterMode.KNOCKDOWN_HARD, FighterMode.WAKEUP}:
         fighter.state_ticks -= 1
         if fighter.state_ticks == 0:
@@ -263,12 +288,17 @@ def _classify_terminal(match: MatchState) -> None:
     match.result = ResultPayload(reason, winner, match.tick, p1.health, p2.health)
     match.phase, p1.mode, p2.mode = MatchPhase.RESULTS, FighterMode.KO if p1.health == 0 else p1.mode, FighterMode.KO if p2.health == 0 else p2.mode
     match.events.append(f"result:{reason.name.lower()}")
+    if reason in {ResultReason.KO, ResultReason.DOUBLE_KO}:
+        ko_target = 1 if p1.health == 0 and p2.health else 2 if p2.health == 0 and p1.health else None
+        _present(match, "ko", winner or None, ko_target, p1 if ko_target == 1 else p2, result=reason)
+    _present(match, "result", winner or None, None, p1 if winner != 2 else p2, result=reason)
 
 
 def tick(match: MatchState, inputs: tuple[InputFrame, InputFrame]) -> None:
     if match.phase is not MatchPhase.FIGHT:
         return
     match.events.clear()
+    match.presentation_events.clear()
     p1_frame, p2_frame = inputs
     for fighter, frame in ((match.p1, p1_frame), (match.p2, p2_frame)):
         if frame.pressed & Action.THROW:
@@ -279,12 +309,12 @@ def tick(match: MatchState, inputs: tuple[InputFrame, InputFrame]) -> None:
     _facing(match.p1, match.p2)
     _start_attack(match.p1, match.p1.definition, p1_frame.pressed, match.events)
     _start_attack(match.p2, match.p2.definition, p2_frame.pressed, match.events)
-    _resolve_strike(match.p1, match.p2, match.p1.definition, match.p2.definition, p2_frame, match.events)
-    _resolve_strike(match.p2, match.p1, match.p2.definition, match.p1.definition, p1_frame, match.events)
-    _resolve_throw(match.p1, match.p2, p2_frame, match.events)
-    _resolve_throw(match.p2, match.p1, p1_frame, match.events)
-    for fighter in (match.p1, match.p2):
-        _advance_states(fighter, match.events)
+    _resolve_strike(match.p1, match.p2, match.p1.definition, match.p2.definition, p2_frame, match.events, match, 1, 2)
+    _resolve_strike(match.p2, match.p1, match.p2.definition, match.p1.definition, p1_frame, match.events, match, 2, 1)
+    _resolve_throw(match.p1, match.p2, p2_frame, match.events, match, 1, 2)
+    _resolve_throw(match.p2, match.p1, p1_frame, match.events, match, 2, 1)
+    for player, fighter in enumerate((match.p1, match.p2), 1):
+        _advance_states(fighter, match.events, match, player)
     if not match.training:
         match.round_ticks = max(0, match.round_ticks - 1)
     _classify_terminal(match)

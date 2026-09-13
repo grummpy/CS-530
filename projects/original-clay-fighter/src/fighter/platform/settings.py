@@ -10,7 +10,7 @@ from typing import Any
 
 from fighter.platform.input import COMBAT_ACTIONS, SemanticAction, default_bindings
 
-SETTINGS_VERSION = 1
+SETTINGS_VERSION = 2
 
 
 @dataclass
@@ -20,10 +20,21 @@ class Accessibility:
 
 
 @dataclass
+class Audio:
+    master: int = 100
+    music: int = 55
+    sfx: int = 80
+    voice: int = 80
+    ui: int = 80
+    muted: list[str] = field(default_factory=list)
+
+
+@dataclass
 class Settings:
     version: int = SETTINGS_VERSION
     bindings: list[dict[str, str]] = field(default_factory=default_bindings)
     accessibility: Accessibility = field(default_factory=Accessibility)
+    audio: Audio = field(default_factory=Audio)
     onboarding_complete: bool = False
 
 
@@ -33,10 +44,10 @@ def user_settings_path() -> Path:
 
 
 def validate(raw: object) -> Settings:
-    if not isinstance(raw, dict) or set(raw) - {"version", "bindings", "accessibility", "onboarding_complete"}:
+    if not isinstance(raw, dict) or set(raw) - {"version", "bindings", "accessibility", "audio", "onboarding_complete"}:
         raise ValueError("settings schema is invalid")
     version = raw.get("version", SETTINGS_VERSION)
-    if version == 0:
+    if version in (0, 1):
         raw = {**raw, "version": SETTINGS_VERSION}
     elif version != SETTINGS_VERSION:
         raise ValueError("unsupported settings version")
@@ -64,7 +75,19 @@ def validate(raw: object) -> Settings:
     complete = raw.get("onboarding_complete", False)
     if not all(isinstance(value, bool) for value in (high, reduced, complete)):
         raise ValueError("settings booleans are invalid")
-    return Settings(bindings=checked, accessibility=Accessibility(high, reduced), onboarding_complete=complete)
+    audio_raw = raw.get("audio", {})
+    categories = ("master", "music", "sfx", "voice", "ui")
+    if not isinstance(audio_raw, dict) or set(audio_raw) - {*categories, "muted"}:
+        raise ValueError("audio settings are invalid")
+    levels = {key: audio_raw.get(key, Audio().__getattribute__(key)) for key in categories}
+    muted = audio_raw.get("muted", [])
+    if (not all(isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= 100
+                for value in levels.values())
+            or not isinstance(muted, list) or any(item not in categories for item in muted)
+            or len(muted) != len(set(muted))):
+        raise ValueError("audio levels are invalid")
+    return Settings(bindings=checked, accessibility=Accessibility(high, reduced),
+                    audio=Audio(**levels, muted=list(muted)), onboarding_complete=complete)
 
 
 def load(path: Path | None = None) -> tuple[Settings, str | None]:
@@ -95,6 +118,8 @@ def _as_dict(settings: Settings) -> dict[str, Any]:
         "version": settings.version, "bindings": settings.bindings,
         "accessibility": {"high_contrast": settings.accessibility.high_contrast,
                           "reduced_effects": settings.accessibility.reduced_effects},
+        "audio": {"master": settings.audio.master, "music": settings.audio.music, "sfx": settings.audio.sfx,
+                  "voice": settings.audio.voice, "ui": settings.audio.ui, "muted": settings.audio.muted},
         "onboarding_complete": settings.onboarding_complete,
     }
 

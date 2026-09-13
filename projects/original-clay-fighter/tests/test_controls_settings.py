@@ -77,13 +77,13 @@ def test_invalid_or_corrupt_settings_recover_to_defaults(tmp_path, payload) -> N
     path = tmp_path / "settings.json"
     path.write_text(json.dumps(payload), encoding="utf-8")
     settings, diagnostic = load(path)
-    assert diagnostic is not None and settings.version == 1
+    assert diagnostic is not None and settings.version == 2
     with pytest.raises(ValueError):
         validate(payload)
 
 
 def test_version_zero_settings_migrate_to_current_defaults() -> None:
-    assert validate({"version": 0}).version == 1
+    assert validate({"version": 0}).version == 2
 
 
 def test_training_reset_and_move_list_onboarding_are_reachable() -> None:

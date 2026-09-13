@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fighter.sim.checksum import checksum_match
+from fighter.sim.events import PresentationEvent
 from fighter.sim.input_frame import InputFrame
 from fighter.sim.match import new_match, reset_round, tick
 from fighter.sim.state import MatchState
@@ -47,3 +48,7 @@ class SessionKernel:
 
     def checksum(self) -> str:
         return checksum_match(self._match)
+
+    def presentation_events(self) -> tuple[PresentationEvent, ...]:
+        """Return this tick's presentation-only events without exposing mutation."""
+        return tuple(self._match.presentation_events)

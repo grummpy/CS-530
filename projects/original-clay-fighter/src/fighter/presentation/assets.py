@@ -37,6 +37,19 @@ class Stage:
     background: Path
 
 
+@dataclass(frozen=True, slots=True)
+class StageReadability:
+    tint: tuple[int, int, int, int]
+    hud_safe_zones: tuple[tuple[int, int, int, int], tuple[int, int, int, int]]
+
+
+STAGE_READABILITY: dict[str, StageReadability] = {
+    "roadside_truck_stop": StageReadability((22, 16, 8, 42), ((20, 18, 540, 54), (720, 18, 540, 54))),
+    "executive_lawn": StageReadability((5, 25, 16, 42), ((20, 18, 540, 54), (720, 18, 540, 54))),
+    "electric_assembly_hall": StageReadability((14, 10, 30, 45), ((20, 18, 540, 54), (720, 18, 540, 54))),
+}
+
+
 def asset_root() -> Path:
     return Path(__file__).resolve().parents[3] / "assets"
 
@@ -96,6 +109,17 @@ def load_stage(stage_id: str) -> Stage:
     ):
         raise ValueError(f"stage validation failed for {stage_id}")
     return Stage(stage_id, ground_y, background_path)
+
+
+def readability_profile(stage_id: str) -> StageReadability:
+    """Return the approved tint and HUD-safe zones for a selectable stage."""
+    return STAGE_READABILITY[load_stage(stage_id).stage_id]
+
+
+def result_clip_route(stage_id: str, result_reason: str) -> str:
+    """Map results to existing presentation labels; never loads finisher media."""
+    readability_profile(stage_id)
+    return "double_ko" if result_reason == "DOUBLE_KO" else "ko" if result_reason == "KO" else "timeout"
 
 
 def frame_index(tick: int, fps: int, frame_count: int) -> int:

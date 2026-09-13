@@ -11,8 +11,10 @@ from fighter.presentation.assets import (
     frame_index,
     load_manifest,
     placement,
+    readability_profile,
     resolve_clip,
     resolved_pivot,
+    result_clip_route,
 )
 from fighter.presentation.assets import load_stage as load_stage_definition
 
@@ -37,7 +39,7 @@ def load_match_assets(pygame: Any, fighter_ids: tuple[str, str], stage_id: str =
 def draw_match(
     pygame: Any, screen: Any, font: Any, game: Any, actions: tuple[set[SemanticAction], set[SemanticAction]],
     training: bool, paused: bool, pause_reason: str | None, reduced_effects: bool,
-    assets: MatchAssets,
+    assets: MatchAssets, stage_id: str = "electric_assembly_hall", effects: Any | None = None,
 ) -> None:
     """Render gameplay information without making rendering part of simulation."""
     match = game.match
@@ -46,6 +48,12 @@ def draw_match(
         screen.blit(assets.stage, (0, 0))
     else:
         pygame.draw.rect(screen, (224, 200, 134), (0, 600, 1280, 120))
+    profile = readability_profile(stage_id)
+    tint = pygame.Surface((1280, 720), pygame.SRCALPHA)
+    tint.fill(profile.tint)
+    screen.blit(tint, (0, 0))
+    for zone in profile.hud_safe_zones:
+        pygame.draw.rect(screen, (8, 8, 14), zone, border_radius=8)
     for index, (fighter, color) in enumerate(((match.p1, (196, 75, 67)), (match.p2, (60, 150, 182)))):
         manifest = assets.manifests[fighter.fighter_id]
         clip_name, _ = resolve_clip(manifest, fighter, 0, None, index + 1)
@@ -73,6 +81,14 @@ def draw_match(
         for fighter in (match.p1, match.p2):
             if fighter.blocking:
                 pygame.draw.circle(screen, (115, 210, 255), (fighter.x, fighter.y - 138), 76, 4)
+    if effects is not None:
+        for effect in effects.effects:
+            x, y = effect.position
+            color = (255, 245, 180) if effect.kind == "block" else (245, 130, 80)
+            pygame.draw.circle(screen, color, (x, y - 100), 14 if effect.essential else 8, 3)
+    if match.result is not None:
+        label = result_clip_route(stage_id, match.result.reason.name).upper().replace("_", " ")
+        screen.blit(pygame.font.Font(None, 68).render(label, True, (255, 235, 150)), (510, 115))
     if paused:
         overlay = pygame.Surface((1280, 720), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 180))

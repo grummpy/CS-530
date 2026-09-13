@@ -10,8 +10,13 @@ from fighter.platform.clock import FixedStepClock
 from fighter.platform.input import InputRouter, SemanticAction
 from fighter.platform.settings import load, save
 from fighter.presentation.app_loop_assets import MatchAssets, draw_match, load_match_assets
+from fighter.presentation.assets import SELECTABLE_STAGES
+from fighter.presentation.audio import AudioLevels, MixerAudioService
+from fighter.presentation.effects import ClayEffectPool
+from fighter.presentation.events import PresentationDispatcher
 from fighter.presentation.shell import Shell
 from fighter.sim.enums import MatchPhase
+from fighter.sim.events import PresentationEvent
 from fighter.sim.kernel import SessionKernel
 
 
@@ -41,6 +46,12 @@ def _draw_menu(pygame: Any, screen: Any, font: Any, shell: Shell, title: str,
         screen.blit(font.render(f"{'▶ ' if selected else '  '}{entry}", True, color), (138, rect.y + 11))
 
 
+def _present_event(audio: MixerAudioService, effects: ClayEffectPool, reduced: bool,
+                   event: PresentationEvent) -> None:
+    audio.dispatch(event)
+    effects.trigger(event, reduced)
+
+
 def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None = None) -> int:
     import pygame
 
@@ -53,7 +64,16 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
     shell, sim_clock = Shell(), FixedStepClock()
     fighters = ("rhinestone_angel", "mr_president", "tech_billionaire", "master_chef")
     p1_id, p2_id, training, game = fighters[0], fighters[1], False, None
+    stage_id = "electric_assembly_hall"
     match_assets: MatchAssets | None = None
+    audio = MixerAudioService(
+        pygame,
+        AudioLevels(
+            settings.audio.master, settings.audio.music, settings.audio.sfx, settings.audio.voice,
+            settings.audio.ui, tuple(settings.audio.muted),
+        ),
+    )
+    dispatcher, effects = PresentationDispatcher(), ClayEffectPool()
     running = True
     remapping: tuple[int, SemanticAction] | None = None
     last_actions: tuple[set[SemanticAction], set[SemanticAction]] = (set(), set())
@@ -89,9 +109,15 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
         if shell.screen != "match":
             entries = {
                 "title": ["Start versus", "Training", "Settings", "Controls"],
-                "select": [f"P1: {display_name(p1_id)}", f"P2: {display_name(p2_id)}", "Begin match"],
+                "select": [f"P1: {display_name(p1_id)}", f"P2: {display_name(p2_id)}",
+                           f"Stage: {stage_id.replace('_', ' ').title()}", "Begin match"],
                 "settings": [f"High contrast: {'on' if settings.accessibility.high_contrast else 'off'}",
                              f"Reduced effects: {'on' if settings.accessibility.reduced_effects else 'off'}",
+                             f"Master volume: {settings.audio.master}%",
+                             f"Music volume: {settings.audio.music}%",
+                             f"SFX volume: {settings.audio.sfx}%",
+                             f"Voice volume: {settings.audio.voice}%",
+                             f"UI volume: {settings.audio.ui}%",
                              "Assign connected controller to P1", "Assign connected controller to P2",
                              "Remap P1 light"],
                 "controls": ["P1: A/D/W/S + F/G/H/J/T", "P2: arrows + keypad 1/2/3/0/5",
@@ -113,15 +139,21 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                         p1_id = fighters[(fighters.index(p1_id) + 1) % len(fighters)]
                     elif shell.focus == 1:
                         p2_id = fighters[(fighters.index(p2_id) + 1) % len(fighters)]
+                    elif shell.focus == 2:
+                        stage_id = SELECTABLE_STAGES[
+                            (SELECTABLE_STAGES.index(stage_id) + 1) % len(SELECTABLE_STAGES)
+                        ]
                     else:
                         training, shell.screen = False, "match"
                         game, sim_clock = SessionKernel(seed, p1_id, p2_id), FixedStepClock()
-                        match_assets = load_match_assets(pygame, (p1_id, p2_id))
+                        match_assets = load_match_assets(pygame, (p1_id, p2_id), stage_id)
+                        audio.start_match_music(seed)
                 elif shell.screen == "training":
                     if shell.focus == 0:
                         training, shell.screen = True, "match"
                         game, sim_clock = SessionKernel(seed, p1_id, p2_id, training=1), FixedStepClock()
-                        match_assets = load_match_assets(pygame, (p1_id, p2_id))
+                        match_assets = load_match_assets(pygame, (p1_id, p2_id), stage_id)
+                        audio.start_match_music(seed)
                     elif shell.focus == 1:
                         shell.screen, shell.focus = "moves", 0
                     else:
@@ -131,14 +163,23 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                         attr = "high_contrast" if shell.focus == 0 else "reduced_effects"
                         setattr(settings.accessibility, attr, not getattr(settings.accessibility, attr))
                         save(settings)
+                    elif shell.focus in {2, 3, 4, 5, 6}:
+                        attr = ("master", "music", "sfx", "voice", "ui")[shell.focus - 2]
+                        value = (getattr(settings.audio, attr) + 10) % 110
+                        setattr(settings.audio, attr, value)
+                        audio.apply_levels(AudioLevels(
+                            settings.audio.master, settings.audio.music, settings.audio.sfx,
+                            settings.audio.voice, settings.audio.ui, tuple(settings.audio.muted),
+                        ))
+                        save(settings)
                     else:
-                        if shell.focus == 4:
+                        if shell.focus == 9:
                             remapping = (0, SemanticAction.LIGHT)
                             diagnostic = "Press a keyboard key or controller button for P1 light."
                         else:
                             device = next(iter(router.lifecycle.devices), None)
                             if device is not None:
-                                router.lifecycle.assign(device, shell.focus - 2)
+                                router.lifecycle.assign(device, shell.focus - 7)
             _draw_menu(pygame, screen, font, shell, shell.screen.upper(), entries,
                        diagnostic or "Arrow/D-pad navigate • Enter/button 0 confirm • Esc/button 1 back",
                        settings.accessibility.high_contrast)
@@ -158,15 +199,21 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                     frames = router.frames()
                     last_actions = (router.actions_for(0), router.actions_for(1))
                     game.tick(frames)
+                    dispatcher.dispatch(
+                        game.presentation_events(),
+                        lambda event: _present_event(audio, effects, settings.accessibility.reduced_effects, event),
+                    )
+                    effects.advance()
                     if on_tick:
                         on_tick(game.tick_index)
                     if game.match.phase is MatchPhase.RESULTS:
                         break
             draw_match(pygame, screen, font, game, last_actions, training, shell.paused,
-                       shell.pause_reason, settings.accessibility.reduced_effects, match_assets)
+                       shell.pause_reason, settings.accessibility.reduced_effects, match_assets, stage_id, effects)
         pygame.display.flip()
     settings.bindings = router.bindings
     settings.onboarding_complete = True
     save(settings)
+    audio.shutdown()
     pygame.quit()
     return 0

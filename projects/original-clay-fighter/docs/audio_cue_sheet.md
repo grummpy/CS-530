@@ -2,6 +2,14 @@
 
 All runtime tracks are 48 kHz stereo signed-16-bit PCM WAV files. The game chooses a deterministic track from the match seed at match start, loops it at 55% music volume, and silently continues when audio initialization or loading fails.
 
+## Cycle 7 event cues
+
+`fighter.presentation.audio.CUE_MANIFEST` v1 maps immutable presentation event IDs to
+original placeholder one-shots. Placeholders deliberately provide no copyrighted audio:
+hit/impact, block, throw, throw-tech, land, KO, and result are cached only when their
+runtime assets exist. Missing assets, channels, or devices enter diagnosable silent mode
+without altering a match. Category gains and mutes are Master, Music, SFX, Voice, and UI.
+
 | Cue ID | Runtime file | Trigger | Duration | Mix / acceptance state |
 |---|---|---|---:|---|
 | MUS-001 | `battle_of_the_kitchen.wav` | Match start | 2:32 | PCM format recorded; in-game listening pending. |

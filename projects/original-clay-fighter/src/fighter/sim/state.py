@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from fighter.sim.constants import GROUND_Y, MAX_HEALTH, P1_SPAWN_X, P2_SPAWN_X
 from fighter.sim.enums import FighterMode, MatchPhase, ResultReason
+from fighter.sim.events import PresentationEvent
 
 if TYPE_CHECKING:
     from fighter.content.loader import FighterDefinition
@@ -75,6 +76,8 @@ class MatchState:
     phase: MatchPhase = MatchPhase.FIGHT
     training: int = 0
     events: list[str] = field(default_factory=list)
+    presentation_events: list[PresentationEvent] = field(default_factory=list)
+    next_presentation_event_id: int = 1
     round_ticks: int = 99 * 60
     result: ResultPayload | None = None
 
