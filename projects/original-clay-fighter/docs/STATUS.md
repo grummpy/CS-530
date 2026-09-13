@@ -29,3 +29,6 @@ pauses safely on focus/device loss, and provides keyboard/controller-operated
 title, selection, settings, training, and move-list views. Versioned,
 allowlisted settings are written atomically in per-user configuration storage.
 See `evidence/G6/CONTROLS_SETTINGS_REPORT_2026-09-13.md`.
+
+Cycle 7 audio and presentation awaits approval. See
+`CYCLE_7_AUDIO_PRESENTATION_BRIEFING.md`.
