@@ -6,7 +6,6 @@ import sys
 
 from fighter.platform.app import headless_main, main
 
-
 def _dispatch() -> int:
     if len(sys.argv) > 1 and sys.argv[1] == "headless":
         sys.argv = [sys.argv[0], "--headless", *sys.argv[2:]]

@@ -1,0 +1,8 @@
+schema: fighter.profile.v1
+id: general_gravy
+version: 1
+display_name: General Gravy
+palette: [tomato_red, oven_black, cream, copper]
+silhouette: round_cook
+moves: general_gravy
+finisher: recipe_revision

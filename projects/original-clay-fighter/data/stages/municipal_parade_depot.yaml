@@ -1,0 +1,14 @@
+schema: fighter.stage.v1
+id: municipal_parade_depot
+version: 1
+display_name: Municipal Parade Depot
+width: 1280
+ground_y: 600
+layers:
+  - {name: sky, parallax: 10, color: [58, 72, 92]}
+  - {name: rafters, parallax: 30, color: [86, 70, 58]}
+  - {name: floats, parallax: 55, color: [140, 92, 70]}
+  - {name: facades, parallax: 75, color: [168, 132, 96]}
+  - {name: banners, parallax: 90, color: [196, 154, 92]}
+  - {name: midground, parallax: 100, color: [48, 42, 50]}
+  - {name: ropes, parallax: 115, color: [92, 64, 48]}

@@ -1,0 +1,8 @@
+schema: fighter.profile.v1
+id: doctor_broadcast
+version: 1
+display_name: Doctor Broadcast
+palette: [lavender, seafoam, white, neon_coral]
+silhouette: tall_narrow_host
+moves: doctor_broadcast
+finisher: sponsored_break
