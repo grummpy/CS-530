@@ -1,0 +1,2 @@
+ticks,seconds,ticks_per_second,python,platform,rss_bytes,cache_bytes,measurement
+6000,0.048868,122780.36,3.12.14,macOS-26.6.2-arm64-arm-64bit,24051712,0,headless simulation only

@@ -170,7 +170,7 @@ def test_results_are_immutable_for_ko_double_ko_timeout_and_training():
     game.tick()
     assert game.match.result is not None
     assert game.match.result.reason is ResultReason.DOUBLE_KO
-    assert game.match.phase is MatchPhase.RESULTS
+    assert game.match.phase is MatchPhase.KO_HOLD
     frozen = game.match.result
     game.tick()
     assert game.match.result == frozen

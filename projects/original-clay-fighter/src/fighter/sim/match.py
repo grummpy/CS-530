@@ -30,6 +30,9 @@ from fighter.sim.input_frame import InputFrame
 from fighter.sim.moves import HitLevel, MoveDefinition
 from fighter.sim.state import FighterState, MatchState, ResultPayload, initial_match
 
+KO_HOLD_TICKS = 30
+FINISHER_WINDOW_TICKS = 180
+
 
 def new_match(seed: int = 1, p1_id: str = "graybox_rival", p2_id: str = "graybox_rival",
               training: int = 0) -> MatchState:
@@ -38,8 +41,8 @@ def new_match(seed: int = 1, p1_id: str = "graybox_rival", p2_id: str = "graybox
 
 def reset_round(match: MatchState) -> None:
     fresh = new_match(match.seed, match.p1.fighter_id, match.p2.fighter_id, match.training)
-    match.p1, match.p2, match.tick, match.phase, match.events, match.round_ticks, match.result = (
-        fresh.p1, fresh.p2, fresh.tick, fresh.phase, [], fresh.round_ticks, None)
+    match.p1, match.p2, match.tick, match.phase, match.events, match.round_ticks, match.result, match.phase_ticks = (
+        fresh.p1, fresh.p2, fresh.tick, fresh.phase, [], fresh.round_ticks, None, 0)
     match.presentation_events = []
 
 
@@ -285,17 +288,51 @@ def _classify_terminal(match: MatchState) -> None:
     else:
         return
     winner = 0 if p1.health == p2.health else 1 if p1.health > p2.health else 2
-    match.result = ResultPayload(reason, winner, match.tick, p1.health, p2.health)
-    match.phase, p1.mode, p2.mode = MatchPhase.RESULTS, FighterMode.KO if p1.health == 0 else p1.mode, FighterMode.KO if p2.health == 0 else p2.mode
+    variant = None
+    if reason is ResultReason.KO and winner:
+        victor, defeated = (p1, p2) if winner == 1 else (p2, p1)
+        variant = f"{victor.fighter_id}_vs_{defeated.fighter_id}"
+    match.result = ResultPayload(reason, winner, match.tick, p1.health, p2.health, variant)
+    match.phase = MatchPhase.KO_HOLD if reason in {ResultReason.KO, ResultReason.DOUBLE_KO} else MatchPhase.RESULTS
+    match.phase_ticks = KO_HOLD_TICKS if match.phase is MatchPhase.KO_HOLD else 0
+    p1.mode, p2.mode = FighterMode.KO if p1.health == 0 else p1.mode, FighterMode.KO if p2.health == 0 else p2.mode
     match.events.append(f"result:{reason.name.lower()}")
     if reason in {ResultReason.KO, ResultReason.DOUBLE_KO}:
         ko_target = 1 if p1.health == 0 and p2.health else 2 if p2.health == 0 and p1.health else None
         _present(match, "ko", winner or None, ko_target, p1 if ko_target == 1 else p2, result=reason)
-    _present(match, "result", winner or None, None, p1 if winner != 2 else p2, result=reason)
+    if match.phase is MatchPhase.RESULTS:
+        _present(match, "result", winner or None, None, p1 if winner != 2 else p2, result=reason)
+
+
+def _advance_terminal(match: MatchState, inputs: tuple[InputFrame, InputFrame]) -> None:
+    """Advance presentation-facing terminal phases without mutating result data."""
+    if match.phase is MatchPhase.KO_HOLD:
+        match.phase_ticks -= 1
+        if match.phase_ticks <= 0:
+            match.phase, match.phase_ticks = MatchPhase.FINISHER_WINDOW, FINISHER_WINDOW_TICKS
+            result = match.result
+            assert result is not None
+            actor = result.winner or None
+            fighter = match.p1 if result.winner != 2 else match.p2
+            _present(match, "finisher", actor, None, fighter, move=result.finisher_variant, result=result.reason)
+    elif match.phase is MatchPhase.FINISHER_WINDOW:
+        skip = bool((inputs[0].pressed | inputs[1].pressed) & Action.START)
+        match.phase_ticks -= 1
+        if skip or match.phase_ticks <= 0:
+            match.phase, match.phase_ticks = MatchPhase.RESULTS, 0
+            result = match.result
+            assert result is not None
+            fighter = match.p1 if result.winner != 2 else match.p2
+            match.events.append("finisher:skip" if skip else "finisher:complete")
+            _present(match, "result", result.winner or None, None, fighter, result=result.reason)
 
 
 def tick(match: MatchState, inputs: tuple[InputFrame, InputFrame]) -> None:
     if match.phase is not MatchPhase.FIGHT:
+        match.events.clear()
+        match.presentation_events.clear()
+        _advance_terminal(match, inputs)
+        match.tick += 1
         return
     match.events.clear()
     match.presentation_events.clear()

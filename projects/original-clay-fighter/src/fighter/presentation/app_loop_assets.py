@@ -17,6 +17,8 @@ from fighter.presentation.assets import (
     result_clip_route,
 )
 from fighter.presentation.assets import load_stage as load_stage_definition
+from fighter.presentation.finishers import FinisherPlayback, fallback_card
+from fighter.sim.enums import MatchPhase
 
 
 @dataclass
@@ -24,6 +26,7 @@ class MatchAssets:
     stage: Any | None
     manifests: dict[str, Any]
     cache: TransformCache = field(default_factory=TransformCache)
+    finisher: FinisherPlayback | None = None
 
 
 def load_match_assets(pygame: Any, fighter_ids: tuple[str, str], stage_id: str = "electric_assembly_hall") -> MatchAssets:
@@ -89,6 +92,13 @@ def draw_match(
     if match.result is not None:
         label = result_clip_route(stage_id, match.result.reason.name).upper().replace("_", " ")
         screen.blit(pygame.font.Font(None, 68).render(label, True, (255, 235, 150)), (510, 115))
+    if match.phase is MatchPhase.FINISHER_WINDOW and assets.finisher is not None:
+        assert match.result is not None
+        frame = assets.finisher.frame((match.tick - match.result.tick - 30) // 4)
+        if frame is not None:
+            screen.blit(frame, (0, 0))
+        else:
+            fallback_card(pygame, screen, font, label, assets.finisher.diagnostic)
     if paused:
         overlay = pygame.Surface((1280, 720), pygame.SRCALPHA)
         overlay.fill((0, 0, 0, 180))

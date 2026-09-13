@@ -44,17 +44,17 @@ def test_events_are_immutable_monotonic_and_checksum_exempt() -> None:
     assert game.presentation_events()[0].event_id > first_id
 
 
-def test_same_tick_result_events_are_ordered_and_reset_keeps_id_sequence() -> None:
+def test_ko_event_and_reset_keep_id_sequence() -> None:
     game = SessionKernel()
     game.match.p1.health = game.match.p2.health = 0
     game.tick()
     events = game.presentation_events()
-    assert [event.kind for event in events] == ["ko", "result"]
-    assert [event.event_id for event in events] == [1, 2]
+    assert [event.kind for event in events] == ["ko"]
+    assert [event.event_id for event in events] == [1]
     game.reset()
     game.match.p1.health = 0
     game.tick()
-    assert game.presentation_events()[0].event_id == 3
+    assert game.presentation_events()[0].event_id == 2
 
 
 def test_dispatcher_and_pool_are_exactly_once_bounded_and_reduced_safe() -> None:

@@ -14,6 +14,7 @@ from fighter.presentation.assets import SELECTABLE_STAGES
 from fighter.presentation.audio import AudioLevels, MixerAudioService
 from fighter.presentation.effects import ClayEffectPool
 from fighter.presentation.events import PresentationDispatcher
+from fighter.presentation.finishers import FinisherPlayback
 from fighter.presentation.shell import Shell
 from fighter.sim.enums import MatchPhase
 from fighter.sim.events import PresentationEvent
@@ -191,6 +192,9 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                 shell.screen, shell.focus = "moves", 0
                 router.clear()
             if SemanticAction.RESET in edges and training:
+                if match_assets.finisher is not None:
+                    match_assets.finisher.teardown()
+                    match_assets.finisher = None
                 game.reset()
                 sim_clock.reset()
                 router.clear()
@@ -199,6 +203,11 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                     frames = router.frames()
                     last_actions = (router.actions_for(0), router.actions_for(1))
                     game.tick(frames)
+                    result = game.match.result
+                    if result is not None and result.finisher_variant and match_assets.finisher is None:
+                        match_assets.finisher = FinisherPlayback(result.finisher_variant)
+                    if game.match.phase in {MatchPhase.KO_HOLD, MatchPhase.FINISHER_WINDOW} and match_assets.finisher is not None:
+                        match_assets.finisher.preload_one(pygame)
                     dispatcher.dispatch(
                         game.presentation_events(),
                         lambda event: _present_event(audio, effects, settings.accessibility.reduced_effects, event),

@@ -35,3 +35,12 @@ Immutable event IDs remain checksum-exempt; the dispatcher, failure-safe mixer, 
 settings, cue registry, bounded clay feedback, and stage readability/result routes are
 covered by `tests/test_cycle7_presentation.py`. See
 `evidence/CYCLE_7_AUDIO_PRESENTATION_REPORT_2026-09-13.md`.
+
+Cycle 8 finisher lifecycle and performance implementation is complete against
+the approved provisional target floor/budgets: authoritative KO hold/finisher
+window/result transitions, deterministic skip/result data, selected-media
+validation, incremental preload, bounded byte-accounted transformed cache,
+teardown, deterministic fallback diagnostics, and raw report output are
+implemented and validated. Target-floor rendered-performance certification is
+still pending on the approved Windows x64 hardware. See
+`evidence/CYCLE_8_FINISHER_PERFORMANCE_REPORT_2026-09-13.md`.

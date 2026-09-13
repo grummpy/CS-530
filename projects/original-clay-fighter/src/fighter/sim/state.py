@@ -20,10 +20,12 @@ class ResultPayload:
     tick: int
     p1_health: int
     p2_health: int
+    finisher_variant: str | None = None
 
-    def snapshot(self) -> dict[str, int | str]:
+    def snapshot(self) -> dict[str, int | str | None]:
         return {"reason": self.reason.name, "winner": self.winner, "tick": self.tick,
-                "p1_health": self.p1_health, "p2_health": self.p2_health}
+                "p1_health": self.p1_health, "p2_health": self.p2_health,
+                "finisher_variant": self.finisher_variant}
 
 
 @dataclass(slots=True)
@@ -80,11 +82,13 @@ class MatchState:
     next_presentation_event_id: int = 1
     round_ticks: int = 99 * 60
     result: ResultPayload | None = None
+    phase_ticks: int = 0
 
     def snapshot(self) -> dict[str, object]:
         return {"seed": self.seed, "tick": self.tick, "phase": self.phase.name,
                 "training": self.training, "p1": self.p1.snapshot(), "p2": self.p2.snapshot(),
                 "round_ticks": self.round_ticks,
+                "phase_ticks": self.phase_ticks,
                 "result": self.result.snapshot() if self.result else None}
 
 

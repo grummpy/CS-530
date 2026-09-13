@@ -26,8 +26,10 @@ class FighterMode(IntEnum):
 class MatchPhase(IntEnum):
     INTRO = 0
     FIGHT = 1
-    RESULTS = 2
-    RESET = 3
+    KO_HOLD = 2
+    FINISHER_WINDOW = 3
+    RESULTS = 4
+    RESET = 5
 
 
 class ResultReason(IntEnum):

@@ -1,0 +1,10 @@
+{
+  "cache_bytes": 0,
+  "measurement": "headless simulation only",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "python": "3.12.14",
+  "rss_bytes": 24051712,
+  "seconds": 0.048868,
+  "ticks": 6000,
+  "ticks_per_second": 122780.36
+}
