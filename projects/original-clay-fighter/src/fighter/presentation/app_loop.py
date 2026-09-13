@@ -2,11 +2,22 @@
 
 import json
 import random
+import sys
 from collections.abc import Callable
 from pathlib import Path
 
 from fighter.content.roster import display_name
 from fighter.platform.clock import FixedStepClock
+from fighter.presentation.assets import (
+    SELECTABLE_STAGES,
+    TransformCache,
+    frame_index,
+    load_manifest,
+    placement,
+    resolve_clip,
+    resolved_pivot,
+)
+from fighter.presentation.assets import load_stage as load_stage_definition
 from fighter.presentation.audio import start_match_music
 from fighter.presentation.finishers import finisher_frame_paths
 from fighter.sim.bits import Action
@@ -17,13 +28,8 @@ from fighter.sim.kernel import SessionKernel
 
 def _load_stage(pygame: object, stage_id: str) -> object | None:
     """Load approved arena art once; preserve a playable fallback on failure."""
-    names = {
-        "roadside_truck_stop": "roadside_truck_stop_concept.png",
-        "executive_lawn": "executive_lawn_concept.png",
-        "electric_assembly_hall": "electric_assembly_hall_concept.png",
-    }
-    path = Path(__file__).resolve().parents[3] / "assets" / "stages" / names[stage_id]
     try:
+        path = load_stage_definition(stage_id).background
         return pygame.transform.smoothscale(
             pygame.image.load(path.as_posix()).convert(), (1280, 720)
         )
@@ -60,36 +66,6 @@ def _load_fighter_clips(pygame: object, fighter_id: str) -> dict[str, list[objec
         return {}
 
 
-def _active_clip(fighter: object, held: int = 0) -> str:
-    if fighter.stun_ticks:
-        return "hit"
-    if fighter.blocking:
-        return "block_low"
-    if fighter.attack_ticks:
-        if fighter.fighter_id == "tech_billionaire":
-            if fighter.attack_kind == 4:
-                return "exosuit_call"
-            if fighter.armor_ticks:
-                return "armor_kick" if fighter.attack_kind == 3 else "armor_punch"
-        return {
-            1: "light",
-            2: "medium",
-            3: "heavy",
-            4: "hostile_takeover"
-            if fighter.fighter_id == "mr_president"
-            else "kitchen_rush"
-            if fighter.fighter_id == "master_chef"
-            else "star_chord",
-        }.get(fighter.attack_kind, "idle")
-    if fighter.fighter_id == "tech_billionaire" and fighter.armor_ticks:
-        return "armor_idle"
-    if held & Action.DOWN:
-        return "crouch"
-    if held & (Action.LEFT | Action.RIGHT):
-        return "walk"
-    return "idle"
-
-
 def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None = None) -> int:
     import pygame
 
@@ -105,7 +81,7 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
         "tech_billionaire": "Disrupt the competition.",
         "master_chef": "Dinner is served.",
     }
-    stages = ("roadside_truck_stop", "executive_lawn", "electric_assembly_hall")
+    stages = SELECTABLE_STAGES
     portraits = {fid: _load_fighter_sprite(pygame, fid) for fid in fighters}
     title_clips = {fid: _load_fighter_clips(pygame, fid) for fid in fighters}
     ui_state, p1_id, p2_id, stage_id, cpu = "title", fighters[0], fighters[1], stages[0], True
@@ -237,10 +213,11 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
         fighter_id: _load_fighter_sprite(pygame, fighter_id)
         for fighter_id in (game.match.p1.fighter_id, game.match.p2.fighter_id)
     }
-    fighter_clips = {
-        fighter_id: _load_fighter_clips(pygame, fighter_id)
+    manifests = {
+        fighter_id: load_manifest(fighter_id)
         for fighter_id in (game.match.p1.fighter_id, game.match.p2.fighter_id)
     }
+    transform_cache = TransformCache()
     bindings = (
         (
             pygame.K_a,
@@ -367,23 +344,32 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
             continue
         for f, color in ((m.p1, (196, 75, 67)), (m.p2, (60, 150, 182))):
             fighter_index = 0 if f is m.p1 else 1
-            frames = fighter_clips.get(f.fighter_id, {}).get(
-                _active_clip(f, held_values[fighter_index]), []
+            manifest = manifests[f.fighter_id]
+            winner = m.result.winner if m.phase is MatchPhase.RESULTS and m.result else None
+            clip_name, _ = resolve_clip(
+                manifest, f, held_values[fighter_index], winner, fighter_index + 1
             )
+            frames = transform_cache.load_clip(pygame, manifest, clip_name, f.facing)
             if frames:
-                frame = frames[(m.tick // 4) % len(frames)]
-                screen.blit(pygame.transform.flip(frame, f.facing < 0, False), (f.x - 160, 300))
+                frame = frames[frame_index(m.tick, manifest.clips[clip_name].fps, len(frames))]
+                source_size = (512, 512)
+                pivot, diagnostic = resolved_pivot(manifest.pivot, source_size)
+                if diagnostic and diagnostic not in transform_cache.diagnostics:
+                    transform_cache.diagnostics.append(diagnostic)
+                    print(f"{f.fighter_id}: {diagnostic}", file=sys.stderr)
+                screen.blit(
+                    frame,
+                    placement(f.x, f.y, pivot, source_size, 320 / source_size[0]),
+                )
             else:
                 pygame.draw.rect(screen, color, (f.x - 35, 440, 70, 160), border_radius=18)
         portrait = fighter_sprites.get(m.p1.fighter_id)
         if portrait is not None:
-            screen.blit(pygame.transform.smoothscale(portrait, (80, 120)), (18, 70))
+            screen.blit(portrait, (18, 70))
         portrait = fighter_sprites.get(m.p2.fighter_id)
         if portrait is not None:
             screen.blit(
-                pygame.transform.flip(
-                    pygame.transform.smoothscale(portrait, (80, 120)), True, False
-                ),
+                pygame.transform.flip(portrait, True, False),
                 (1182, 70),
             )
         pygame.draw.rect(screen, (80, 20, 25), (40, 35, 500, 24))
