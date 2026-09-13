@@ -10,6 +10,7 @@ from fighter.platform.clock import FixedStepClock
 from fighter.presentation.audio import start_match_music
 from fighter.presentation.finishers import finisher_frame_paths
 from fighter.sim.bits import Action
+from fighter.sim.enums import MatchPhase
 from fighter.sim.input_frame import InputFrame
 from fighter.sim.kernel import SessionKernel
 
@@ -328,7 +329,7 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
             game.tick((p1_frame, p2_frame))
             if on_tick:
                 on_tick(game.tick_index)
-            if game.match.phase == 2:
+            if game.match.phase is MatchPhase.RESULTS:
                 break
         m = game.match
         screen.fill((37, 33, 55))
@@ -336,9 +337,9 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
             screen.blit(stage, (0, 0))
         else:
             pygame.draw.rect(screen, (224, 200, 134), (0, 600, 1280, 120))
-        if m.phase == 2:
-            if not finisher_frames:
-                winner, loser = (m.p1, m.p2) if m.p1.health >= m.p2.health else (m.p2, m.p1)
+        if m.phase is MatchPhase.RESULTS:
+            if not finisher_frames and m.result is not None and m.result.winner:
+                winner, loser = (m.p1, m.p2) if m.result.winner == 1 else (m.p2, m.p1)
                 finisher_frames = [
                     pygame.transform.smoothscale(
                         pygame.image.load(path.as_posix()).convert(), (1280, 720)
@@ -357,10 +358,10 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                 pygame.display.flip()
                 clock.tick(10)
                 continue
-            screen.blit(
-                font.render("RESULTS — finisher unavailable — R rematch", True, (255, 240, 190)),
-                (380, 350),
+            result_text = "DRAW" if m.result is None or m.result.winner == 0 else (
+                "P1 WINS" if m.result.winner == 1 else "P2 WINS"
             )
+            screen.blit(font.render(f"{result_text} — R rematch", True, (255, 240, 190)), (450, 350))
             pygame.display.flip()
             clock.tick(60)
             continue

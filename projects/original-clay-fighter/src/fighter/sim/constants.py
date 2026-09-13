@@ -1,6 +1,8 @@
-"""Integer-space stage and combat constants. Units are pixels and ticks."""
+"""Cycle 4's versioned, integer-only global fight rules."""
 
 from __future__ import annotations
+
+from dataclasses import dataclass
 
 STAGE_WIDTH = 1280
 STAGE_HEIGHT = 720
@@ -8,29 +10,35 @@ GROUND_Y = 600
 LEFT_WALL = 80
 RIGHT_WALL = 1200
 WALK_SPEED = 5
-DASH_SPEED = 12
-DASH_DURATION = 12
-BACKDASH_SPEED = -11
-BACKDASH_DURATION = 14
 JUMP_VY = -16
-JUMP_VX = 6
 GRAVITY = 1
 MAX_FALL = 18
-FIGHTER_WIDTH = 70
-FIGHTER_HEIGHT = 160
-CROUCH_HEIGHT = 100
-AIR_HEIGHT = 150
-PUSH_HALF_WIDTH = 28
-THROW_RANGE = 90
 MAX_HEALTH = 1000
 MAX_METER = 3000
-INTRO_TICKS = 60
-FINISHER_WINDOW_TICKS = 90
-KO_HOLD_TICKS = 30
-ROUND_RESET_TICKS = 40
-COMMAND_BUFFER = 15
-HITSTOP_LIGHT = 4
-HITSTOP_MEDIUM = 6
-HITSTOP_HEAVY = 8
 P1_SPAWN_X = 360
 P2_SPAWN_X = 920
+
+
+@dataclass(frozen=True, slots=True)
+class FightRules:
+    """Global policy: fighter-specific values remain in validated content."""
+
+    version: str = "cycle4.v1"
+    jump_startup_ticks: int = 3
+    landing_ticks: int = 4
+    soft_knockdown_ticks: int = 30
+    hard_knockdown_ticks: int = 50
+    wakeup_ticks: int = 12
+    wakeup_invulnerable_ticks: int = 6
+    throw_startup: int = 4
+    throw_active: int = 2
+    throw_recovery: int = 14
+    throw_range: int = 90
+    throw_damage: int = 120
+    throw_tech_window: int = 2
+    throw_knockdown_ticks: int = 30
+    max_cancel_depth: int = 2
+    combo_damage_percent: int = 100
+
+
+RULES = FightRules()

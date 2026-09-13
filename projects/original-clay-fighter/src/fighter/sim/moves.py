@@ -43,6 +43,10 @@ class MoveDefinition:
     is_super: bool = False
     animation: str = ""
     cancels: tuple[str, ...] = ()
+    cancel_start: int = 0
+    cancel_end: int = 0
+    cancel_on_hit: bool = False
+    cancel_on_block: bool = False
     events: tuple[tuple[int, str], ...] = ()
 
     @property
@@ -81,10 +85,12 @@ def _hb(start: int, end: int, x: int, y: int, w: int, h: int) -> HitboxWindow:
 
 MOVES: dict[str, MoveDefinition] = {
     "5L": MoveDefinition(
-        "5L", 4, 3, 8, 40, 10, 8, 4, 4, 0, HitLevel.MID, 40, (_hb(4, 7, 20, -130, 70, 30),)
+        "5L", 4, 3, 8, 40, 10, 8, 4, 4, 0, HitLevel.MID, 40, (_hb(4, 7, 20, -130, 70, 30),),
+        cancels=("5M",), cancel_start=4, cancel_end=10, cancel_on_hit=True, cancel_on_block=True,
     ),
     "5M": MoveDefinition(
-        "5M", 7, 4, 12, 70, 14, 11, 6, 6, 0, HitLevel.MID, 60, (_hb(7, 11, 24, -140, 90, 40),)
+        "5M", 7, 4, 12, 70, 14, 11, 6, 6, 0, HitLevel.MID, 60, (_hb(7, 11, 24, -140, 90, 40),),
+        cancels=("5H",), cancel_start=7, cancel_end=14, cancel_on_hit=True,
     ),
     "5H": MoveDefinition(
         "5H",

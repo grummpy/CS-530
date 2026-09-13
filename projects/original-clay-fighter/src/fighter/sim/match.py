@@ -1,79 +1,146 @@
-"""Small deterministic combat loop; presentation never mutates this module's state."""
+"""Cycle 4 deterministic, integer-only local fight loop.
+
+Per tick order is movement/air physics, wall clamp, symmetric push separation,
+position-facing, action starts, simultaneous strike resolution, throws, state
+timers, then the single terminal-result classification point.
+"""
+
+from __future__ import annotations
 
 from fighter.content.loader import FighterDefinition, load_fighter
-from fighter.sim.bits import Action
+from fighter.sim.bits import Action, dir_numpad
 from fighter.sim.boxes import Box
-from fighter.sim.constants import LEFT_WALL, RIGHT_WALL, WALK_SPEED
+from fighter.sim.constants import (
+    GRAVITY,
+    GROUND_Y,
+    LEFT_WALL,
+    MAX_FALL,
+    RIGHT_WALL,
+    RULES,
+    WALK_SPEED,
+)
+from fighter.sim.enums import FighterMode, MatchPhase, ResultReason
 from fighter.sim.input_frame import InputFrame
-from fighter.sim.moves import MoveDefinition
-from fighter.sim.state import FighterState, MatchState, initial_match
+from fighter.sim.moves import HitLevel, MoveDefinition
+from fighter.sim.state import FighterState, MatchState, ResultPayload, initial_match
 
 
-def new_match(
-    seed: int = 1, p1_id: str = "graybox_rival", p2_id: str = "graybox_rival", training: int = 0
-) -> MatchState:
+def new_match(seed: int = 1, p1_id: str = "graybox_rival", p2_id: str = "graybox_rival",
+              training: int = 0) -> MatchState:
     return initial_match(seed, p1_id, p2_id, training, load_fighter(p1_id), load_fighter(p2_id))
 
 
 def reset_round(match: MatchState) -> None:
     fresh = new_match(match.seed, match.p1.fighter_id, match.p2.fighter_id, match.training)
-    match.p1, match.p2, match.tick, match.phase, match.events, match.round_ticks = (
-        fresh.p1,
-        fresh.p2,
-        fresh.tick,
-        fresh.phase,
-        [],
-        fresh.round_ticks,
-    )
+    match.p1, match.p2, match.tick, match.phase, match.events, match.round_ticks, match.result = (
+        fresh.p1, fresh.p2, fresh.tick, fresh.phase, [], fresh.round_ticks, None)
 
 
-def _move(f: FighterState, held: int) -> None:
-    f.blocking = bool(held & Action.DOWN) and not f.attack_ticks
-    if f.stun_ticks or f.attack_ticks:
+def _push_interval(fighter: FighterState) -> tuple[int, int]:
+    box = fighter.definition.push_box
+    return fighter.x + box.x, fighter.x + box.x + box.w
+
+
+def _move_and_jump(fighter: FighterState, held: int, pressed: int) -> None:
+    fighter.blocking = False
+    locked = {FighterMode.ATTACK, FighterMode.THROW, FighterMode.JUMP_STARTUP, FighterMode.HITSTUN,
+              FighterMode.BLOCKSTUN, FighterMode.KNOCKDOWN_SOFT, FighterMode.KNOCKDOWN_HARD,
+              FighterMode.WAKEUP, FighterMode.KO}
+    if fighter.mode in locked:
+        return
+    if fighter.mode in {FighterMode.ASCENT, FighterMode.DESCENT}:
+        direction = (1 if held & Action.RIGHT else 0) - (1 if held & Action.LEFT else 0)
+        fighter.x += direction * WALK_SPEED
+        return
+    if fighter.mode is FighterMode.NEUTRAL and pressed & Action.UP:
+        fighter.mode, fighter.state_ticks = FighterMode.JUMP_STARTUP, RULES.jump_startup_ticks
         return
     direction = (1 if held & Action.RIGHT else 0) - (1 if held & Action.LEFT else 0)
-    f.x = max(LEFT_WALL, min(RIGHT_WALL, f.x + direction * WALK_SPEED))
+    if fighter.airborne:
+        fighter.x += direction * WALK_SPEED
+        return
+    if direction:
+        fighter.mode = FighterMode.WALK
+        fighter.x += direction * WALK_SPEED
+    elif held & Action.DOWN:
+        fighter.mode = FighterMode.CROUCH
+    else:
+        fighter.mode = FighterMode.NEUTRAL
+
+
+def _clamp_and_separate(p1: FighterState, p2: FighterState) -> None:
+    """Clamp first, then split overlap by position, never player iteration."""
+    for fighter in (p1, p2):
+        left, right = _push_interval(fighter)
+        fighter.x += max(LEFT_WALL - left, 0) - max(right - RIGHT_WALL, 0)
+    left_fighter, right_fighter = (p1, p2) if p1.x <= p2.x else (p2, p1)
+    overlap = _push_interval(left_fighter)[1] - _push_interval(right_fighter)[0]
+    if overlap > 0:
+        left_limit = left_fighter.x - (LEFT_WALL - left_fighter.definition.push_box.x)
+        right_limit = (RIGHT_WALL - (right_fighter.definition.push_box.x + right_fighter.definition.push_box.w)) - right_fighter.x
+        left_shift = min((overlap + 1) // 2, max(0, left_limit))
+        right_shift = min(overlap - left_shift, max(0, right_limit))
+        left_shift += overlap - left_shift - right_shift
+        left_fighter.x -= left_shift
+        right_fighter.x += right_shift
+
+
+def _facing(p1: FighterState, p2: FighterState) -> None:
+    if p1.x != p2.x:
+        p1.facing = 1 if p2.x > p1.x else -1
+        p2.facing = -p1.facing
 
 
 def _attack_kind(move_name: str) -> int:
     return {"light": 1, "medium": 2, "heavy": 3}.get(move_name, 4)
 
 
-def _start_attack(
-    f: FighterState, definition: FighterDefinition, pressed: int, events: list[str]
-) -> None:
-    if f.stun_ticks or f.attack_ticks:
+def _can_cancel(fighter: FighterState, definition: FighterDefinition, pressed: int) -> str | None:
+    if fighter.mode is not FighterMode.ATTACK or not fighter.attack_confirm:
+        return None
+    source = definition.moves[fighter.attack_move]
+    frame = source.total - fighter.attack_ticks + 1
+    if not source.cancel_start <= frame <= source.cancel_end or fighter.cancel_depth >= RULES.max_cancel_depth:
+        return None
+    allowed = source.cancel_on_hit if fighter.attack_confirm == "hit" else source.cancel_on_block
+    if not allowed:
+        return None
+    for action, name in ((Action.LIGHT, "light"), (Action.MEDIUM, "medium"), (Action.HEAVY, "heavy"),
+                         (Action.SPECIAL, definition.profile.special_id)):
+        if pressed & action and name in source.cancels and name != source.move_id:
+            return name
+    return None
+
+
+def _start_attack(fighter: FighterState, definition: FighterDefinition, pressed: int,
+                  events: list[str]) -> None:
+    cancel = _can_cancel(fighter, definition, pressed)
+    if fighter.mode in {FighterMode.JUMP_STARTUP, FighterMode.ASCENT, FighterMode.DESCENT,
+                        FighterMode.LANDING, FighterMode.HITSTUN, FighterMode.BLOCKSTUN,
+                        FighterMode.KNOCKDOWN_SOFT, FighterMode.KNOCKDOWN_HARD, FighterMode.WAKEUP,
+                        FighterMode.KO, FighterMode.THROW}:
         return
-    for action, move_name in (
-        (Action.LIGHT, "light"),
-        (Action.MEDIUM, "medium"),
-        (Action.HEAVY, "heavy"),
-        (Action.SPECIAL, definition.profile.special_id),
-    ):
+    if pressed & Action.THROW and fighter.mode not in {FighterMode.ATTACK, FighterMode.THROW}:
+        fighter.mode, fighter.attack_move = FighterMode.THROW, "__throw__"
+        fighter.attack_ticks, fighter.hit_this_attack, fighter.attack_confirm = (
+            RULES.throw_startup + RULES.throw_active + RULES.throw_recovery, False, "")
+        return
+    if fighter.mode is FighterMode.ATTACK and cancel is None:
+        return
+    for action, move_name in ((Action.LIGHT, "light"), (Action.MEDIUM, "medium"),
+                              (Action.HEAVY, "heavy"), (Action.SPECIAL, definition.profile.special_id)):
         if not (pressed & action) or move_name is None:
             continue
-        if action == Action.SPECIAL:
-            move = definition.moves.get(move_name)
-            charge_requirement = (
-                definition.profile.armor_charge_requirement
-                if definition.profile.armor_charge_requirement is not None
-                else move.meter_cost if move is not None else 0
-            )
-            if f.special_charge < charge_requirement:
-                return
-            f.special_charge = 0
-            if definition.profile.armor_charge_requirement is not None:
-                f.armor_charge = 0
-                f.armor_ticks = definition.profile.armor_duration_ticks
-                events.append("armor_mode_on")
-                return
         move = definition.moves.get(move_name)
         if move is None:
             return
-        f.attack_kind = _attack_kind(move_name)
-        f.attack_move = move_name
-        f.attack_ticks = move.total
-        f.hit_this_attack = False
+        if action is Action.SPECIAL and fighter.special_charge < move.meter_cost:
+            return
+        if action is Action.SPECIAL:
+            fighter.special_charge -= move.meter_cost
+        fighter.cancel_depth = fighter.cancel_depth + 1 if cancel else 0
+        fighter.mode, fighter.attack_kind, fighter.attack_move = FighterMode.ATTACK, _attack_kind(move_name), move_name
+        fighter.attack_ticks, fighter.hit_this_attack, fighter.attack_confirm = move.total, False, ""
         return
 
 
@@ -81,63 +148,144 @@ def _active_hitbox(attacker: FighterState, move: MoveDefinition) -> Box | None:
     frame = move.total - attacker.attack_ticks + 1
     for window in move.hitboxes:
         if window.start <= frame <= window.end:
-            return window.box.world(attacker.x, 600, attacker.facing)
+            return window.box.world(attacker.x, GROUND_Y, attacker.facing)
     return None
 
 
-def _resolve(
-    attacker: FighterState,
-    defender: FighterState,
-    definition: FighterDefinition,
-    defender_definition: FighterDefinition,
-    events: list[str],
-) -> None:
-    if not attacker.attack_ticks or attacker.hit_this_attack:
+def _guarding(defender: FighterState, held: int, level: HitLevel) -> bool:
+    if defender.airborne:
+        return dir_numpad(held, defender.facing) in {4, 7} and level is not HitLevel.LOW
+    direction = dir_numpad(held, defender.facing)
+    return direction == 1 if level is HitLevel.LOW else direction in {1, 4}
+
+
+def _damage(defender: FighterState, amount: int) -> None:
+    defender.health = max(0, defender.health - amount)
+    defender.special_charge = min(3000, defender.special_charge + amount)
+
+
+def _resolve_strike(attacker: FighterState, defender: FighterState, definition: FighterDefinition,
+                    defender_definition: FighterDefinition, defender_input: InputFrame,
+                    events: list[str]) -> None:
+    if attacker.mode is not FighterMode.ATTACK or attacker.hit_this_attack:
         return
     move = definition.moves[attacker.attack_move]
     hitbox = _active_hitbox(attacker, move)
-    defender_box = defender_definition.hurt_box.world(defender.x, 600, defender.facing)
-    if hitbox is not None and hitbox.intersects(defender_box):
-        damage = move.damage + (
-            definition.profile.armor_damage_bonus if attacker.armor_ticks else 0
-        )
-        if defender.blocking:
-            damage = max(1, damage // 3)
-            events.append("block")
-        absorbed = damage
-        defender.health = max(0, defender.health - damage)
-        charge_limit = (
-            defender_definition.profile.armor_charge_requirement
-            if defender_definition.profile.armor_charge_requirement is not None
-            else max((candidate.meter_cost for candidate in defender_definition.moves.values()), default=0)
-        )
-        if defender_definition.profile.armor_charge_requirement is not None:
-            defender.armor_charge = min(charge_limit, defender.armor_charge + absorbed)
-        defender.special_charge = min(charge_limit, defender.special_charge + absorbed)
-        defender.stun_ticks = move.blockstun if defender.blocking else move.hitstun
-        attacker.hit_this_attack = True
-        events.append("hit")
+    if hitbox is None or not hitbox.intersects(defender_definition.hurt_box.world(defender.x, defender.y, defender.facing)):
+        return
+    guarded = _guarding(defender, defender_input.held, move.hit_level)
+    damage = max(1, move.damage * RULES.combo_damage_percent // 100)
+    if guarded:
+        _damage(defender, max(1, damage // 3))
+        defender.mode, defender.stun_ticks, defender.blocking = FighterMode.BLOCKSTUN, move.blockstun, True
+        attacker.attack_confirm, events[:] = "block", [*events, "block"]
+    else:
+        _damage(defender, damage)
+        defender.stun_ticks, defender.combo_count = move.hitstun, defender.combo_count + 1
+        if move.launch:
+            defender.y, defender.vy, defender.mode = GROUND_Y - 1, -8, FighterMode.ASCENT
+        else:
+            defender.mode = FighterMode.HITSTUN
+        attacker.attack_confirm, events[:] = "hit", [*events, "hit"]
+    attacker.hit_this_attack = True
+
+
+def _throw_active(fighter: FighterState) -> bool:
+    frame = RULES.throw_startup + RULES.throw_active + RULES.throw_recovery - fighter.attack_ticks + 1
+    return RULES.throw_startup < frame <= RULES.throw_startup + RULES.throw_active
+
+
+def _resolve_throw(attacker: FighterState, defender: FighterState, defender_input: InputFrame,
+                   events: list[str]) -> None:
+    if attacker.mode is not FighterMode.THROW or attacker.hit_this_attack or not _throw_active(attacker):
+        return
+    if defender.airborne or defender.mode in {FighterMode.KNOCKDOWN_SOFT, FighterMode.KNOCKDOWN_HARD,
+                                               FighterMode.WAKEUP, FighterMode.KO}:
+        events.append("throw_immune")
+    elif abs(attacker.x - defender.x) > RULES.throw_range:
+        events.append("throw_whiff")
+    elif defender_input.pressed & Action.THROW or defender.throw_tech_until >= attacker.throw_tech_until:
+        attacker.attack_ticks = defender.attack_ticks = 0
+        attacker.mode = defender.mode = FighterMode.NEUTRAL
+        events.append("throw_tech")
+    else:
+        _damage(defender, RULES.throw_damage)
+        defender.mode, defender.state_ticks, defender.combo_count = (
+            FighterMode.KNOCKDOWN_SOFT, RULES.throw_knockdown_ticks, 0)
+        events.append("throw")
+    attacker.hit_this_attack = True
+
+
+def _advance_states(fighter: FighterState, events: list[str]) -> None:
+    if fighter.mode is FighterMode.JUMP_STARTUP:
+        fighter.state_ticks -= 1
+        if fighter.state_ticks == 0:
+            fighter.mode, fighter.vy = FighterMode.ASCENT, -16
+    elif fighter.mode in {FighterMode.ASCENT, FighterMode.DESCENT} or fighter.airborne:
+        fighter.y += fighter.vy
+        fighter.vy = min(MAX_FALL, fighter.vy + GRAVITY)
+        fighter.mode = FighterMode.ASCENT if fighter.vy < 0 else FighterMode.DESCENT
+        if fighter.y >= GROUND_Y:
+            fighter.y, fighter.vy, fighter.mode, fighter.state_ticks = GROUND_Y, 0, FighterMode.LANDING, RULES.landing_ticks
+            events.append("land")
+    elif fighter.mode in {FighterMode.LANDING, FighterMode.KNOCKDOWN_SOFT, FighterMode.KNOCKDOWN_HARD, FighterMode.WAKEUP}:
+        fighter.state_ticks -= 1
+        if fighter.state_ticks == 0:
+            if fighter.mode in {FighterMode.KNOCKDOWN_SOFT, FighterMode.KNOCKDOWN_HARD}:
+                fighter.mode, fighter.state_ticks = FighterMode.WAKEUP, RULES.wakeup_ticks
+            else:
+                fighter.mode = FighterMode.NEUTRAL
+    if fighter.attack_ticks:
+        fighter.attack_ticks -= 1
+        if fighter.attack_ticks == 0 and fighter.mode in {FighterMode.ATTACK, FighterMode.THROW}:
+            fighter.mode, fighter.combo_count = FighterMode.NEUTRAL, 0
+    if fighter.stun_ticks:
+        fighter.stun_ticks -= 1
+        if fighter.stun_ticks == 0 and fighter.mode in {FighterMode.HITSTUN, FighterMode.BLOCKSTUN}:
+            fighter.mode, fighter.combo_count = FighterMode.NEUTRAL, 0
+    if fighter.armor_ticks:
+        fighter.armor_ticks -= 1
+        if fighter.armor_ticks == 0:
+            events.append("armor_mode_off")
+
+
+def _classify_terminal(match: MatchState) -> None:
+    if match.training or match.result is not None:
+        return
+    p1, p2 = match.p1, match.p2
+    if p1.health == 0 or p2.health == 0:
+        reason = ResultReason.DOUBLE_KO if p1.health == p2.health else ResultReason.KO
+    elif match.round_ticks == 0:
+        reason = ResultReason.TIMEOUT_DRAW if p1.health == p2.health else ResultReason.TIMEOUT_WIN
+    else:
+        return
+    winner = 0 if p1.health == p2.health else 1 if p1.health > p2.health else 2
+    match.result = ResultPayload(reason, winner, match.tick, p1.health, p2.health)
+    match.phase, p1.mode, p2.mode = MatchPhase.RESULTS, FighterMode.KO if p1.health == 0 else p1.mode, FighterMode.KO if p2.health == 0 else p2.mode
+    match.events.append(f"result:{reason.name.lower()}")
+
+
 def tick(match: MatchState, inputs: tuple[InputFrame, InputFrame]) -> None:
-    if match.phase != 1:
+    if match.phase is not MatchPhase.FIGHT:
         return
     match.events.clear()
-    for fighter, frame in zip((match.p1, match.p2), inputs, strict=True):
-        fighter.facing = 1 if fighter is match.p1 else -1
-        _move(fighter, frame.held)
-        _start_attack(fighter, fighter.definition, frame.pressed, match.events)
-    p1_definition, p2_definition = match.p1.definition, match.p2.definition
-    _resolve(match.p1, match.p2, p1_definition, p2_definition, match.events)
-    _resolve(match.p2, match.p1, p2_definition, p1_definition, match.events)
+    p1_frame, p2_frame = inputs
+    for fighter, frame in ((match.p1, p1_frame), (match.p2, p2_frame)):
+        if frame.pressed & Action.THROW:
+            fighter.throw_tech_until = match.tick + RULES.throw_startup
+    for fighter, frame in ((match.p1, p1_frame), (match.p2, p2_frame)):
+        _move_and_jump(fighter, frame.held, frame.pressed)
+    _clamp_and_separate(match.p1, match.p2)
+    _facing(match.p1, match.p2)
+    _start_attack(match.p1, match.p1.definition, p1_frame.pressed, match.events)
+    _start_attack(match.p2, match.p2.definition, p2_frame.pressed, match.events)
+    _resolve_strike(match.p1, match.p2, match.p1.definition, match.p2.definition, p2_frame, match.events)
+    _resolve_strike(match.p2, match.p1, match.p2.definition, match.p1.definition, p1_frame, match.events)
+    _resolve_throw(match.p1, match.p2, p2_frame, match.events)
+    _resolve_throw(match.p2, match.p1, p1_frame, match.events)
     for fighter in (match.p1, match.p2):
-        fighter.attack_ticks = max(0, fighter.attack_ticks - 1)
-        fighter.stun_ticks = max(0, fighter.stun_ticks - 1)
-        if fighter.armor_ticks:
-            fighter.armor_ticks -= 1
-            if fighter.armor_ticks == 0:
-                match.events.append("armor_mode_off")
+        _advance_states(fighter, match.events)
     if not match.training:
         match.round_ticks = max(0, match.round_ticks - 1)
-        if match.p1.health == 0 or match.p2.health == 0 or match.round_ticks == 0:
-            match.phase = 2
-            match.events.append("ko")
+    _classify_terminal(match)
     match.tick += 1

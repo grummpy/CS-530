@@ -1,4 +1,4 @@
-"""Match and fighter state labels."""
+"""Named, integer-only state labels owned by the simulation."""
 
 from __future__ import annotations
 
@@ -9,22 +9,33 @@ class FighterMode(IntEnum):
     NEUTRAL = 0
     WALK = 1
     CROUCH = 2
-    JUMP = 3
-    DASH = 4
-    ATTACK = 5
-    BLOCK = 6
-    HITSTUN = 7
-    BLOCKSTUN = 8
-    KNOCKDOWN = 9
-    KO = 10
+    JUMP_STARTUP = 3
+    ASCENT = 4
+    DESCENT = 5
+    LANDING = 6
+    ATTACK = 7
+    THROW = 8
+    HITSTUN = 9
+    BLOCKSTUN = 10
+    KNOCKDOWN_SOFT = 11
+    KNOCKDOWN_HARD = 12
+    WAKEUP = 13
+    KO = 14
 
 
 class MatchPhase(IntEnum):
     INTRO = 0
     FIGHT = 1
-    KO = 2
-    FINISHER_WINDOW = 3
-    RESET = 4
+    RESULTS = 2
+    RESET = 3
+
+
+class ResultReason(IntEnum):
+    KO = 0
+    DOUBLE_KO = 1
+    TIMEOUT_WIN = 2
+    TIMEOUT_DRAW = 3
+    TRAINING = 4
 
 
 def mode_name(mode: int) -> str:

@@ -129,6 +129,22 @@ def _move(
     total = startup + active + recovery
     if end > total:
         raise ContentValidationError(f"{context}.active_frames exceed move duration")
+    cancel_raw = raw.get("cancels")
+    cancels: tuple[str, ...] = ()
+    cancel_start = cancel_end = 0
+    cancel_on_hit = cancel_on_block = False
+    if cancel_raw is not None:
+        values = _mapping(cancel_raw, f"{context}.cancels")
+        targets = values.get("targets")
+        if not isinstance(targets, list) or not all(isinstance(target, str) and target for target in targets):
+            raise ContentValidationError(f"{context}.cancels.targets must be a string list")
+        cancels = tuple(targets)
+        cancel_start, cancel_end = _frames(values.get("frames"), f"{context}.cancels.frames")
+        if cancel_end > total or not isinstance(values.get("on_hit"), bool) or not isinstance(values.get("on_block"), bool):
+            raise ContentValidationError(f"{context}.cancels must declare valid frames, on_hit, and on_block")
+        cancel_on_hit, cancel_on_block = values["on_hit"], values["on_block"]
+        if move_id in cancels:
+            raise ContentValidationError(f"{context}.cancels may not self-loop")
     return MoveDefinition(
         move_id=move_id,
         startup=startup,
@@ -146,6 +162,11 @@ def _move(
         hitboxes=(HitboxWindow(start, end, hitbox),),
         animation=move_id,
         events=((start, "hit"),),
+        cancels=cancels,
+        cancel_start=cancel_start,
+        cancel_end=cancel_end,
+        cancel_on_hit=cancel_on_hit,
+        cancel_on_block=cancel_on_block,
     )
 
 
@@ -190,6 +211,25 @@ def _fighter_definition(fighter_id: str) -> FighterDefinition:
         spec = _mapping(move_specs.get(move_name), f"moves/{fighter_id}.yaml.moves.{move_name}")
         box_spec = _mapping(move_boxes.get(move_name), f"boxes/{fighter_id}.yaml.moves.{move_name}")
         moves[move_name] = _move(move_name, spec, box_spec, f"{fighter_id}.{move_name}")
+    for move in moves.values():
+        if any(target not in moves for target in move.cancels):
+            raise ContentValidationError(f"{fighter_id}.{move.move_id}.cancels targets an unknown move")
+    visiting: set[str] = set()
+    visited: set[str] = set()
+
+    def visit(move_name: str) -> None:
+        if move_name in visiting:
+            raise ContentValidationError(f"{fighter_id} cancel graph contains a cycle")
+        if move_name in visited:
+            return
+        visiting.add(move_name)
+        for target in moves[move_name].cancels:
+            visit(target)
+        visiting.remove(move_name)
+        visited.add(move_name)
+
+    for source in moves:
+        visit(source)
     special = moves_raw.get("special")
     if profile.special_id is not None:
         spec = _mapping(special, f"moves/{fighter_id}.yaml.special")
@@ -218,9 +258,9 @@ def load_catalog() -> Mapping[str, FighterDefinition]:
         graybox_profile = FighterProfile("graybox_rival", "Graybox Rival", "graybox_rival", "special")
         graybox_moves = {
             **MOVES,
-            "light": MOVES["5L"],
-            "medium": MOVES["5M"],
-            "heavy": MOVES["5H"],
+            "light": replace(MOVES["5L"], move_id="light", cancels=("medium",)),
+            "medium": replace(MOVES["5M"], move_id="medium", cancels=("heavy",)),
+            "heavy": replace(MOVES["5H"], move_id="heavy"),
             "special": replace(MOVES["5H"], meter_cost=210),
         }
         catalog["graybox_rival"] = FighterDefinition(
