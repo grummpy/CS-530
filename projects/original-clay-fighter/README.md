@@ -1,12 +1,31 @@
-# Original Clay Fighter: Papier Parade
+# Papier Parade (Original Clay Fighter)
 
-Papier Parade is an original-fiction, clay-style 2D fighting-game project developed as part of CS-530. Its creative direction uses fictional satirical archetypes and original assets only; it does not use real-person likenesses, third-party game assets, or imitation voices.
+Local, two-player, original-fiction 2D clay-style fighting-game prototype.
+Python 3.12+ and Pygame-ce. Designed to run and debug from PyCharm.
 
-## Project resources
+This is original satirical fiction. It does not depict or imitate real people,
+companies, political groups, copyrighted fighters, game assets, logos, voices,
+quotes, or trade dress.
 
-- [Parent relationship](PARENT.md)
-- [Executive game plan](../../docs/2D_FIGHTER_EXECUTIVE_PLAN.md)
-- [Grok build-prompt package](../../grok_handoff/README.md)
-- [Grok prompt ZIP](../../grok-handoff-prompts.zip)
+## Current gate
 
-The playable implementation, when started, belongs beneath this directory. Keep production assets, game source, test results, and project-specific documentation isolated here; course-wide documentation and shared skills remain at the CS-530 root.
+**G5 — Measured sandbox perf.** Sim 50.8 µs/tick; dummy 1080p flip ~1.5 ms.
+Physical 1080p panel FPS is not claimed. See docs/engine_recommendation.md.
+
+Post-G5: local login screen, placeholder WAV foley, Blender atlas contract,
+pooled VFX, distinct silhouettes. Physical 1080p panel still unmeasured.
+
+Full history lives locally at commit `d59b5b2`. Shell `git push` from the sandbox
+cannot send username/password. Push from a machine logged in as `grummpy`.
+
+## Quick start
+
+See [docs/setup.md](docs/setup.md).
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+python -m fighter
+pytest
+```

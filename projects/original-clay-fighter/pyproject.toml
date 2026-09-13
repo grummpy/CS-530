@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "original-clay-fighter"
+version = "0.1.0"
+description = "Local two-player original-fiction 2D clay-style fighting-game prototype."
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [{ name = "Christopher Decker" }]
+dependencies = [
+    "pygame-ce==2.5.8",
+    "PyYAML==6.0.1",
+    "jsonschema==4.26.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.0.3",
+    "ruff==0.16.7",
+    "mypy==2.3.1",
+    "types-PyYAML==6.0.12.20250822",
+]
+
+[project.scripts]
+clay-fighter = "fighter.__main__:main"
+clay-fighter-headless = "fighter.__main__:headless_main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
