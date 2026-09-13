@@ -1,7 +1,11 @@
 # Status
 
-G0 foundation and G1 deterministic combat core: pass. The Pygame-ce shell now
-includes four playable clay fighters, title and selection screens, three
-arenas, CPU play, runtime PCM music, HUD health/block/special indicators, and
-12 finisher frame sequences. See `RELEASE_READINESS_REVIEW.md` for the verified
-runtime and remaining prototype limitations.
+Cycle 1 commercial-readiness baseline is complete. The playable Pygame-ce
+prototype contains four selectable clay fighters, three arena backgrounds,
+local/CPU matches, runtime PCM music, HUD health/block/special indicators, and
+12 finisher frame sequences.
+
+Cycle 2 requirements and architecture are awaiting approval. No Cycle 2
+implementation is authorized. See `COMMERCIAL_READINESS_AUDIT.md` and
+`evidence/CYCLE_1_BASELINE.md` for the verified baseline, open requirements,
+and the approval boundary.

@@ -8,4 +8,9 @@ The Tech Billionaire’s visual bible and armored combat reference were generate
 
 Master Chef’s approved asset sheet was generated with the built-in image generator on 2026-09-13 and retained under `art_source/characters/master_chef/`. His native master and transparent clip library were built with Blender 5.2.1 from the adjacent `build_sprite_library.py` source.
 
-The handoff claimed 51 synthesized placeholder WAV files and one graybox turnaround image, but neither is present in this repository tree after reconciliation. Character sprites, HUD/button art, and finisher video files remain separate production work.
+Current tracked inventory includes four Blender character masters, four character
+frame libraries, 12 MP4 finisher previews, 360 PNG finisher frames, three stage
+concept images, and five runtime PCM WAV tracks. The previously claimed 51
+synthesized placeholder WAV files and one graybox turnaround are not present.
+The per-file release manifest, hashes, and export-version checks remain Cycle 2
+work.

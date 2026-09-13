@@ -2,7 +2,8 @@
 
 **Date:** 2026-09-13  
 **Disposition:** Prototype only. Do not authorize commercial release or unbounded content expansion.  
-**Approval requested:** Approve Cycle 1, the first-build audit and requirements baseline. No gameplay/source update is authorized by this briefing.
+**Cycle 1 disposition:** Complete and published.
+**Approval requested:** Approve the separate Cycle 2 requirements-and-architecture briefing. No Cycle 2 gameplay/source update is authorized until that gate passes.
 
 ## Top-priority objective
 
@@ -79,4 +80,4 @@ Each cycle requires the preceding gate to pass. Any failed requirement returns t
 
 ## Approval decision
 
-Approve **Cycle 1 only** to formalize and reconcile the release baseline. It produces requirements, evidence, target hardware/platform choices, and an implementation-ready backlog; it does not alter fight behavior, art, or shipping configuration. Implementation begins only after the Cycle 1 briefing/gate is accepted.
+Cycle 1 formalized and reconciled the release baseline without altering fight behavior, character art, or shipping configuration. See `CYCLE_2_REQUIREMENTS_BRIEFING.md` for the next decision gate.
