@@ -21,3 +21,6 @@ Manifest cadence, source-pivot placement with a diagnostic fallback, state and
 stage validation, and cached transforms remain presentation-only. See
 `evidence/G5/FIGHTER_FRAME_SCENE_REPORT_2026-09-13.md` for commit-pinned
 implementation and actual validation results.
+
+Cycle 6 controls, settings, and onboarding awaits approval. See
+`CYCLE_6_CONTROLS_SETTINGS_BRIEFING.md`.
