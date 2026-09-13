@@ -1,0 +1,10 @@
+schema: fighter.profile.v1
+id: mr_president
+version: 1
+display_name: Mr. President
+palette: [neon_orange, navy_blue, coral, sandy_blonde, banknote_green]
+silhouette: broad_suit_and_briefcase
+runtime_portrait: assets/characters/mr_president/portrait.png
+moves: mr_president
+special: hostile_takeover
+stage_default: executive_lawn

@@ -1,0 +1,13 @@
+schema: fighter.moves.v1
+fighter_id: mr_president
+special:
+  id: hostile_takeover
+  input: special
+  startup: 14
+  active: 4
+  recovery: 24
+  damage: 90
+  hit_level: mid
+  event_frame: 14
+  effect: harmless_paperwork_burst
+  note: Briefcase swing begins from a planted, shoulder-led stance and returns to a stable recovery pose.
