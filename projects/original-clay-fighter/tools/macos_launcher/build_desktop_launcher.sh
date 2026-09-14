@@ -8,7 +8,16 @@ contents="$app/Contents"
 resources="$contents/Resources"
 mkdir -p "$resources" "$contents/MacOS"
 
-cp "$project_root/tools/macos_launcher/launch_game.sh" "$contents/MacOS/Papier Parade"
+cp "$project_root/tools/macos_launcher/launch_game.sh" "$resources/launch_game.command"
+chmod +x "$resources/launch_game.command"
+cat > "$contents/MacOS/Papier Parade" <<'SCRIPT'
+#!/bin/zsh
+# Finder apps do not expose standard output. Launch the updater in Terminal so
+# first-run installation progress and any actionable error remain visible.
+set -euo pipefail
+app_root="$(cd "$(dirname "$0")/.." && pwd)"
+exec /usr/bin/open -a Terminal "$app_root/Resources/launch_game.command"
+SCRIPT
 chmod +x "$contents/MacOS/Papier Parade"
 cp "$project_root/assets/characters/tech_billionaire/portrait.png" "$resources/TechBillionaireCover.png"
 
