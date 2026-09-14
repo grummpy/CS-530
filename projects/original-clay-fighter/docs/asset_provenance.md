@@ -7,6 +7,9 @@
 is original project artwork with no third-party game logos or television-show
 branding. Pygame renders the title, tagline, menu labels, focus borders, and
 navigation hint separately so the interface remains readable and interactive.
+The selection screen derives cached fighter-card crops from the same key art
+and pairs them with the three committed arena images. Names, player colors,
+focus borders, stage labels, and the begin-match control remain live UI.
 
 Runtime presentation uses the approved stage concept art in `assets/stages/*_concept.png`, created with the built-in image generator on 2026-09-13 and reviewed by the project owner. The accompanying Blender blockouts and the procedural source script are retained as editable stage foundations. Rhinestone Angel’s visual bible, Blender source, and transparent runtime frames are recorded under `art_source/characters/rhinestone_angel/` and `assets/characters/rhinestone_angel/`.
 

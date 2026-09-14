@@ -97,6 +97,121 @@ def _draw_title(pygame: Any, screen: Any, shell: Shell, entries: list[str],
     screen.blit(hint, ((1280 - hint.get_width()) // 2, 691))
 
 
+def _load_selection_art(pygame: Any, title_background: Any | None) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Cache fighter key-art crops and arena previews for the selection screen."""
+    fighter_crops: dict[str, Any] = {}
+    if title_background is not None:
+        crop_rects = {
+            "rhinestone_angel": (0, 145, 350, 440),
+            "mr_president": (325, 150, 300, 435),
+            "tech_billionaire": (675, 145, 315, 440),
+            "master_chef": (970, 140, 310, 445),
+        }
+        for fighter_id, rect in crop_rects.items():
+            fighter_crops[fighter_id] = title_background.subsurface(rect).copy()
+    stage_previews: dict[str, Any] = {}
+    stage_files = {
+        "roadside_truck_stop": "roadside_truck_stop_concept.png",
+        "executive_lawn": "executive_lawn_concept.png",
+        "electric_assembly_hall": "electric_assembly_hall_concept.png",
+    }
+    for stage_id, filename in stage_files.items():
+        try:
+            image = pygame.image.load(resource_path(f"assets/stages/{filename}").as_posix()).convert()
+            stage_previews[stage_id] = pygame.transform.smoothscale(image, (376, 212))
+        except (OSError, pygame.error):
+            continue
+    return fighter_crops, stage_previews
+
+
+def _draw_select(
+    pygame: Any,
+    screen: Any,
+    shell: Shell,
+    fighters: tuple[str, ...],
+    p1_id: str,
+    p2_id: str,
+    stage_id: str,
+    detail: str,
+    high_contrast: bool,
+    background: Any | None,
+    fighter_crops: dict[str, Any],
+    stage_previews: dict[str, Any],
+) -> None:
+    """Render fighter and arena choices as a cinematic versus card."""
+    if background is None:
+        screen.fill((22, 12, 30))
+    else:
+        screen.blit(background, (0, 0))
+    shade = pygame.Surface((1280, 720), pygame.SRCALPHA)
+    shade.fill((8, 5, 17, 190))
+    screen.blit(shade, (0, 0))
+
+    heading_font = pygame.font.SysFont("impact", 54)
+    name_font = pygame.font.SysFont("arial", 25, bold=True)
+    small_font = pygame.font.SysFont("arial", 16, bold=True)
+    heading = heading_font.render("CHOOSE YOUR CLAY", True, (255, 207, 60))
+    screen.blit(heading, heading.get_rect(center=(640, 48)))
+
+    card_specs = ((pygame.Rect(42, 100, 350, 420), p1_id, "PLAYER 1", (235, 63, 103), 0),
+                  (pygame.Rect(888, 100, 350, 420), p2_id, "PLAYER 2", (52, 178, 224), 1))
+    for rect, fighter_id, player_label, accent, focus_index in card_specs:
+        selected = shell.focus == focus_index
+        pygame.draw.rect(screen, (8, 5, 15), rect.move(7, 8), border_radius=18)
+        pygame.draw.rect(screen, (25, 20, 37), rect, border_radius=18)
+        art = fighter_crops.get(fighter_id)
+        if art is not None:
+            screen.blit(pygame.transform.smoothscale(art, (rect.width - 12, 326)), (rect.x + 6, rect.y + 6))
+        pygame.draw.rect(screen, (15, 11, 24, 235), (rect.x + 6, rect.bottom - 88, rect.width - 12, 82))
+        pygame.draw.rect(screen, (255, 231, 112) if selected else accent, rect, 5 if selected else 3, border_radius=18)
+        screen.blit(small_font.render(player_label, True, accent), (rect.x + 18, rect.bottom - 78))
+        name = name_font.render(display_name(fighter_id).upper(), True, (255, 255, 255))
+        screen.blit(name, (rect.x + 18, rect.bottom - 52))
+        cycle = small_font.render("PRESS ENTER TO CHANGE", True, (220, 210, 228))
+        screen.blit(cycle, (rect.right - cycle.get_width() - 16, rect.bottom - 76))
+
+    vs = heading_font.render("VS", True, (255, 82, 99))
+    screen.blit(vs, vs.get_rect(center=(640, 245)))
+    stage_rect = pygame.Rect(450, 304, 380, 218)
+    preview = stage_previews.get(stage_id)
+    if preview is not None:
+        screen.blit(preview, (stage_rect.x + 2, stage_rect.y + 2))
+    else:
+        pygame.draw.rect(screen, (34, 29, 45), stage_rect)
+    pygame.draw.rect(
+        screen, (255, 231, 112) if shell.focus == 2 else (153, 130, 180),
+        stage_rect, 5 if shell.focus == 2 else 2, border_radius=12,
+    )
+    stage_label = name_font.render(stage_id.replace("_", " ").upper(), True, (255, 255, 255))
+    label_bg = pygame.Surface((stage_rect.width - 4, 42), pygame.SRCALPHA)
+    label_bg.fill((8, 5, 15, 220))
+    screen.blit(label_bg, (stage_rect.x + 2, stage_rect.bottom - 44))
+    screen.blit(stage_label, stage_label.get_rect(center=(640, stage_rect.bottom - 23)))
+
+    roster_y = 545
+    for index, fighter_id in enumerate(fighters):
+        rect = pygame.Rect(92 + index * 196, roster_y, 180, 48)
+        active = fighter_id in (p1_id, p2_id)
+        pygame.draw.rect(screen, (87, 46, 104) if active else (28, 23, 42), rect, border_radius=9)
+        pygame.draw.rect(screen, (255, 210, 94) if active else (111, 99, 127), rect, 2, border_radius=9)
+        label = small_font.render(display_name(fighter_id), True, (255, 255, 255))
+        screen.blit(label, label.get_rect(center=rect.center))
+
+    fight_rect = pygame.Rect(890, roster_y, 300, 58)
+    fight_selected = shell.focus == 3
+    pygame.draw.rect(screen, (8, 5, 15), fight_rect.move(0, 5), border_radius=12)
+    pygame.draw.rect(screen, (225, 61, 91) if fight_selected else (42, 33, 55), fight_rect, border_radius=12)
+    pygame.draw.rect(
+        screen, (255, 231, 112) if fight_selected else (190, 176, 205),
+        fight_rect, 4 if fight_selected else 2, border_radius=12,
+    )
+    fight_label = name_font.render("BEGIN MATCH", True, (255, 255, 255))
+    screen.blit(fight_label, fight_label.get_rect(center=fight_rect.center))
+    hint_color = (255, 255, 255) if high_contrast else (224, 215, 231)
+    hint = pygame.font.SysFont("arial", 16).render(detail, True, hint_color)
+    screen.blit(hint, hint.get_rect(center=(640, 682)))
+
+
 def _present_event(audio: MixerAudioService, effects: ClayEffectPool, reduced: bool,
                    event: PresentationEvent) -> None:
     audio.dispatch(event)
@@ -117,6 +232,7 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
     p1_id, p2_id, training, game = fighters[0], fighters[1], False, None
     stage_id = "electric_assembly_hall"
     title_background = _load_title_background(pygame)
+    fighter_crops, stage_previews = _load_selection_art(pygame, title_background)
     match_assets: MatchAssets | None = None
     audio = MixerAudioService(
         pygame,
@@ -237,6 +353,12 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                 _draw_title(
                     pygame, screen, shell, entries, detail,
                     settings.accessibility.high_contrast, title_background,
+                )
+            elif shell.screen == "select":
+                _draw_select(
+                    pygame, screen, shell, fighters, p1_id, p2_id, stage_id, detail,
+                    settings.accessibility.high_contrast, title_background,
+                    fighter_crops, stage_previews,
                 )
             else:
                 _draw_menu(
