@@ -9,6 +9,7 @@ from typing import Any
 
 import yaml
 
+from fighter.resource_paths import asset_root, data_root, resource_path
 from fighter.sim.enums import FighterMode
 
 PRESENTATION_MAP_VERSION = 1
@@ -48,14 +49,6 @@ STAGE_READABILITY: dict[str, StageReadability] = {
     "executive_lawn": StageReadability((5, 25, 16, 42), ((20, 18, 540, 54), (720, 18, 540, 54))),
     "electric_assembly_hall": StageReadability((14, 10, 30, 45), ((20, 18, 540, 54), (720, 18, 540, 54))),
 }
-
-
-def asset_root() -> Path:
-    return Path(__file__).resolve().parents[3] / "assets"
-
-
-def data_root() -> Path:
-    return Path(__file__).resolve().parents[3] / "data"
 
 
 def load_manifest(fighter_id: str) -> SpriteManifest:
@@ -98,7 +91,7 @@ def load_stage(stage_id: str) -> Stage:
         ground_y = raw["ground_y"]
     except (OSError, TypeError, KeyError, yaml.YAMLError) as error:
         raise ValueError(f"invalid stage definition for {stage_id}") from error
-    background_path = Path(__file__).resolve().parents[3] / background
+    background_path = resource_path(background)
     if (
         not isinstance(raw, dict)
         or raw.get("schema") != "fighter.stage.v1"

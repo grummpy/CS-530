@@ -1,0 +1,2 @@
+recursive-include src/fighter/resources/assets *
+recursive-include src/fighter/resources/data *

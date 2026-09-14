@@ -44,3 +44,11 @@ teardown, deterministic fallback diagnostics, and raw report output are
 implemented and validated. Target-floor rendered-performance certification is
 still pending on the approved Windows x64 hardware. See
 `evidence/CYCLE_8_FINISHER_PERFORMANCE_REPORT_2026-09-13.md`.
+
+Cycle 9 packaging and quality systems are implemented: package-resource
+resolution, reproducible wheel/sdist verification, hash-locked dependencies,
+SBOM/checksum metadata generation, and Python 3.12 CI are present. Local
+Python 3.12 validation evidence is retained in
+`evidence/CYCLE_9_PACKAGING_QUALITY_REPORT_2026-09-13.md`. Windows
+target-floor installed-package smoke remains a CI/evidence gate until its
+Windows run is retained.

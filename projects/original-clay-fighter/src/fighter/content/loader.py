@@ -10,13 +10,11 @@ from typing import TYPE_CHECKING, Any
 
 import yaml
 
+from fighter.resource_paths import data_root
+
 if TYPE_CHECKING:
     from fighter.sim.boxes import Box
     from fighter.sim.moves import HitLevel, MoveDefinition
-
-
-def data_root() -> Path:
-    return Path(__file__).resolve().parents[3] / "data"
 
 
 class ContentValidationError(ValueError):

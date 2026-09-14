@@ -1,0 +1,53 @@
+name: Package quality
+
+on:
+  pull_request:
+    paths:
+      - "projects/original-clay-fighter/**"
+  push:
+    paths:
+      - "projects/original-clay-fighter/**"
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: projects/original-clay-fighter
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install --require-hashes -r requirements/dev.lock
+      - run: python -m pip install -e . --no-deps
+      - run: python -m ruff check src tests
+      - run: python -m mypy
+      - run: python -m pytest
+      - run: SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) python scripts/build_release.py
+      - run: |
+          mkdir -p build/reference
+          cp dist/* build/reference/
+          rm -rf dist
+          SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) python scripts/build_release.py
+          cmp build/reference/*.whl dist/*.whl
+          cmp build/reference/*.tar.gz dist/*.tar.gz
+      - run: python scripts/verify_artifacts.py
+      - run: python -m pip download --require-hashes --dest .wheelhouse -r requirements/runtime.lock
+      - run: |
+          python -m venv .release-venv
+          .release-venv/bin/python -m pip install --no-index --find-links .wheelhouse dist/*.whl
+          .release-venv/bin/clay-fighter-headless
+          SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy .release-venv/bin/clay-fighter --smoke
+          .release-venv/bin/python -c "from fighter.presentation.assets import load_manifest, load_stage; assert load_manifest('master_chef'); assert load_stage('electric_assembly_hall')"
+          .release-venv/bin/python -m pip uninstall -y original-clay-fighter
+          ! .release-venv/bin/python -c "import fighter"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: original-clay-fighter-${{ github.sha }}
+          path: |
+            projects/original-clay-fighter/dist/*
+            projects/original-clay-fighter/artifacts/*

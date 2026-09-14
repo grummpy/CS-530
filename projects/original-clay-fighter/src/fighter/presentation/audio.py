@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any, Literal
 
+from fighter.resource_paths import asset_root
 from fighter.sim.events import PresentationEvent
 
 AudioCategory = Literal["master", "music", "sfx", "voice", "ui"]
@@ -76,7 +76,7 @@ class MixerAudioService:
             if mixer.get_init() is None:
                 mixer.init(frequency=48000, channels=2)
             mixer.set_num_channels(self.channel_limit)
-            path = Path(__file__).resolve().parents[3] / "assets" / "audio" / "music" / track
+            path = asset_root() / "audio" / "music" / track
             mixer.music.load(path.as_posix())
             mixer.music.set_volume(self.levels.gain("music"))
             mixer.music.play(-1, fade_ms=500)
@@ -94,7 +94,7 @@ class MixerAudioService:
             sound = self.cache.get(filename)
             if sound is None:
                 sound = self.pygame.mixer.Sound(
-                    (Path(__file__).resolve().parents[3] / "assets" / "audio" / "cues" / filename).as_posix()
+                    (asset_root() / "audio" / "cues" / filename).as_posix()
                 )
                 self.cache[filename] = sound
             channel = self.pygame.mixer.find_channel(True)

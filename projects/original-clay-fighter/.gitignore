@@ -6,5 +6,9 @@ src/*.egg-info/
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/
+dist/
+build/
+.wheelhouse/
+artifacts/
 .env
 credentials.*

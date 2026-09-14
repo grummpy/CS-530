@@ -22,3 +22,19 @@ pip install -e ".[dev]"
 python -m fighter
 pytest
 ```
+
+## Release verification
+
+Package resources are installed beneath `fighter.resources`; the runtime never
+depends on repository-relative `assets/` or `data/` paths. Create reproducible
+artifacts and provenance with:
+
+```bash
+python -m pip install --require-hashes -r requirements/dev.lock
+SOURCE_DATE_EPOCH=$(git log -1 --format=%ct) python scripts/build_release.py
+python scripts/verify_artifacts.py
+```
+
+`artifacts/` contains `SHA256SUMS`, build metadata, and a CycloneDX SBOM.
+The `Package quality` workflow performs the same checks plus a clean wheel
+install, SDL-dummy smoke test, uninstall, and remnant-import check.

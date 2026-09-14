@@ -7,6 +7,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, cast
 
+from fighter.resource_paths import asset_root
+
 FRAME_COUNT = 30
 SOURCE_SIZE = (640, 360)
 DISPLAY_SIZE = (1280, 720)
@@ -14,7 +16,7 @@ DEFAULT_CACHE_BYTES = 48 * 1024 * 1024
 
 
 def finisher_root() -> Path:
-    return Path(__file__).resolve().parents[3] / "assets" / "finishers"
+    return asset_root() / "finishers"
 
 
 @dataclass(frozen=True, slots=True)
