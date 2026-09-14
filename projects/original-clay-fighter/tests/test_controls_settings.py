@@ -11,7 +11,7 @@ from fighter.sim.kernel import SessionKernel
 
 def test_router_converts_physical_state_to_tick_edges_without_shell_leakage() -> None:
     router = InputRouter()
-    router.event("key", "key:122", True)
+    router.event("key", "key:97", True)
     router.event("key", "key:13", True)
     first = router.frames()[0]
     assert first.held == Action.LIGHT and first.pressed == Action.LIGHT
@@ -40,8 +40,8 @@ def test_router_supports_mixed_controller_assignment_and_remap_conflicts() -> No
 
 def test_quick_press_and_release_survives_until_next_simulation_tick() -> None:
     router = InputRouter()
-    router.event("key", "key:122", True)
-    router.event("key", "key:122", False)
+    router.event("key", "key:97", True)
+    router.event("key", "key:97", False)
     first = router.frames()[0]
     assert first.held == Action.LIGHT and first.pressed == Action.LIGHT
     second = router.frames()[0]
@@ -94,14 +94,14 @@ def test_invalid_or_corrupt_settings_recover_to_defaults(tmp_path, payload) -> N
     path = tmp_path / "settings.json"
     path.write_text(json.dumps(payload), encoding="utf-8")
     settings, diagnostic = load(path)
-    assert diagnostic is not None and settings.version == 4
+    assert diagnostic is not None and settings.version == 5
     with pytest.raises(ValueError):
         validate(payload)
 
 
 def test_version_zero_settings_migrate_to_current_defaults() -> None:
-    assert validate({"version": 0}).version == 4
-    migrated = validate({"version": 3, "bindings": [{}, {}]})
+    assert validate({"version": 0}).version == 5
+    migrated = validate({"version": 4, "bindings": [{}, {}]})
     assert migrated.bindings[0]["right"] == "key:1073741903"
 
 

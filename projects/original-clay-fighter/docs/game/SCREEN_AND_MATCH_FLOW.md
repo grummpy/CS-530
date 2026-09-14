@@ -1,7 +1,7 @@
 # Screen and match flow
 
 The playable shell uses the four shipped clay fighters: Rhinestone Angel, Mr.
-President, The Tech Billionaire, and Master Chef. Existing fighter portraits,
+President, Elon Gates, and Master Chef. Existing fighter portraits,
 animation frames, arena concept art, music, and finisher frames are used in the
 game instead of substituting unrelated placeholder content.
 
@@ -33,8 +33,8 @@ opponent finisher using the approved fighter and arena artwork.
 
 | Player | Move | Block | Attacks |
 | --- | --- | --- | --- |
-| Player 1 | Left / Right; Up jump | Down crouch/back | `Z` light, `X` medium, `C` heavy, `V` special, `B` throw |
-| Player 2 | `A` / `D`; `W` jump | `S` crouch/back | `J` light, `K` medium, `L` heavy, `I` special, `U` throw |
+| Player 1 | Left / Right; Up jump | Down crouch/back | `A` light, `S` medium, `D` heavy, `F` special, `G` throw |
+| Player 2 | `J` / `L`; `I` jump | `K` crouch/back | Keypad `1` light, `2` medium, `3` heavy, `0` special, `5` throw |
 
 `R` resets the match and `Esc` exits the window.
 

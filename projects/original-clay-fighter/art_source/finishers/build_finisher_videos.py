@@ -22,6 +22,7 @@ ACCENTS = {
     "tech_billionaire": (42, 229, 230, 255),
     "master_chef": (255, 196, 91, 255),
 }
+DISPLAY_NAMES = {"tech_billionaire": "ELON GATES"}
 
 
 def fighter_art(fighter: str, index: int) -> Image.Image:
@@ -68,7 +69,7 @@ def render(winner: str, loser: str, frame: int) -> Image.Image:
     draw.rectangle((0, 326, 640, 360), fill=(7, 5, 15, 220))
     draw.text(
         (18, 14),
-        f"{winner.replace('_', ' ').upper()}  •  FINAL CLAY",
+        f"{DISPLAY_NAMES.get(winner, winner.replace('_', ' ').upper())}  •  FINAL CLAY",
         fill=(255, 235, 174, 255),
         stroke_width=1,
         stroke_fill=(30, 8, 20, 255),

@@ -146,11 +146,11 @@ def draw_match(
         ("←/→", "Move"),
         ("↑", "Jump"),
         ("↓", "Crouch"),
-        ("Z", "Light"),
-        ("X", "Medium"),
-        ("C", "Heavy"),
-        ("V", "Special"),
-        ("B", "Throw"),
+        ("A", "Light"),
+        ("S", "Medium"),
+        ("D", "Heavy"),
+        ("F", "Special"),
+        ("G", "Throw"),
     ):
         x += keycap(x, 632, key, label, (166, 45, 82))
     if cpu_difficulty:

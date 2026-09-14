@@ -1,7 +1,7 @@
 schema: fighter.profile.v1
 id: tech_billionaire
 version: 1
-display_name: The Tech Billionaire
+display_name: Elon Gates
 palette: [corporate_black, heather_gray, indigo, graphite, brass, teal]
 silhouette: layered_shirt_cybernetic_wrist_controller
 runtime_portrait: assets/characters/tech_billionaire/portrait.png

@@ -73,19 +73,29 @@ CONTROLLER_DEFAULTS = {
 
 def default_bindings() -> list[dict[str, str]]:
     """Return serializable bindings; key values deliberately use stable pygame key codes."""
-    # Player 1 uses the arrow cluster and an arcade-style left-hand attack row.
+    # Player 1 uses the arrow cluster and the familiar ASDF action row.
     p1 = (
         "1073741904",
         "1073741903",
         "1073741906",
         "1073741905",
-        "122",
-        "120",
-        "99",
-        "118",
-        "98",
+        "97",
+        "115",
+        "100",
+        "102",
+        "103",
     )
-    p2 = ("97", "100", "119", "115", "106", "107", "108", "105", "117")
+    p2 = (
+        "106",
+        "108",
+        "105",
+        "107",
+        "1073741913",
+        "1073741914",
+        "1073741915",
+        "1073741922",
+        "1073741917",
+    )
     names = ("left", "right", "up", "down", "light", "medium", "heavy", "special", "throw")
     common = {
         "confirm": "key:13",

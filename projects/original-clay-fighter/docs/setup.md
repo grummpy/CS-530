@@ -33,9 +33,9 @@ fresh virtual environment with the runtime lock before approving a release.
 ## Controls and settings
 
 All windowed input travels through semantic actions before the fixed-tick
-simulation adapter. Keyboard defaults are P1 arrow keys for movement, `Z/X/C`
-for light/medium/heavy attacks, `V` for special, and `B` for throw. P2 uses
-`W/A/S/D` and `J/K/L/I/U`; a connected controller uses D-pad, buttons
+simulation adapter. Keyboard defaults are P1 arrow keys for movement, `A/S/D`
+for light/medium/heavy attacks, `F` for special, and `G` for throw. P2 uses
+`J/L/I/K` and keypad `1/2/3/0/5`; a connected controller uses D-pad, buttons
 `0–4` for combat, and buttons `7/8/9` for pause/back/confirm. Menus support
 arrows or D-pad with Enter/controller confirm. Settings are stored outside the
 installation in the user configuration directory and can be changed from the

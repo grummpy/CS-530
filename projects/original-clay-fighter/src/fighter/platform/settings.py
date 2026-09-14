@@ -10,7 +10,7 @@ from typing import Any
 
 from fighter.platform.input import COMBAT_ACTIONS, SemanticAction, default_bindings
 
-SETTINGS_VERSION = 4
+SETTINGS_VERSION = 5
 
 
 @dataclass
@@ -55,7 +55,7 @@ def validate(raw: object) -> Settings:
     }:
         raise ValueError("settings schema is invalid")
     version = raw.get("version", SETTINGS_VERSION)
-    if version in (0, 1, 2, 3):
+    if version in (0, 1, 2, 3, 4):
         raw = {**raw, "version": SETTINGS_VERSION, "bindings": default_bindings()}
     elif version != SETTINGS_VERSION:
         raise ValueError("unsupported settings version")

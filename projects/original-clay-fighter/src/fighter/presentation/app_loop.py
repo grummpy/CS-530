@@ -228,8 +228,6 @@ def _draw_select(
         screen.blit(small_font.render(player_label, True, accent), (rect.x + 18, rect.bottom - 78))
         name = name_font.render(display_name(fighter_id).upper(), True, (255, 255, 255))
         screen.blit(name, (rect.x + 18, rect.bottom - 52))
-        cycle = small_font.render("PRESS ENTER TO CHANGE", True, (220, 210, 228))
-        screen.blit(cycle, (rect.right - cycle.get_width() - 16, rect.bottom - 76))
 
     vs = heading_font.render("VS", True, (255, 82, 99))
     screen.blit(vs, vs.get_rect(center=(640, 245)))
@@ -254,7 +252,7 @@ def _draw_select(
 
     roster_y = 545
     for index, fighter_id in enumerate(fighters):
-        rect = pygame.Rect(92 + index * 196, roster_y, 180, 48)
+        rect = pygame.Rect(52 + index * 174, roster_y, 162, 48)
         active = fighter_id in (p1_id, p2_id)
         pygame.draw.rect(screen, (87, 46, 104) if active else (28, 23, 42), rect, border_radius=9)
         pygame.draw.rect(
@@ -263,7 +261,7 @@ def _draw_select(
         label = small_font.render(display_name(fighter_id), True, (255, 255, 255))
         screen.blit(label, label.get_rect(center=rect.center))
 
-    difficulty_rect = pygame.Rect(802, roster_y, 190, 58)
+    difficulty_rect = pygame.Rect(760, roster_y, 200, 58)
     pygame.draw.rect(screen, (35, 28, 50), difficulty_rect, border_radius=12)
     pygame.draw.rect(
         screen,
@@ -275,7 +273,7 @@ def _draw_select(
     difficulty_label = small_font.render(f"CPU: {cpu_difficulty.upper()}", True, (255, 255, 255))
     screen.blit(difficulty_label, difficulty_label.get_rect(center=difficulty_rect.center))
 
-    fight_rect = pygame.Rect(1008, roster_y, 190, 58)
+    fight_rect = pygame.Rect(980, roster_y, 250, 58)
     fight_selected = shell.focus == 4
     pygame.draw.rect(screen, (8, 5, 15), fight_rect.move(0, 5), border_radius=12)
     pygame.draw.rect(
@@ -307,8 +305,8 @@ def _mouse_focus(pygame: Any, screen_name: str, position: tuple[int, int]) -> in
             pygame.Rect(42, 100, 350, 420),
             pygame.Rect(888, 100, 350, 420),
             pygame.Rect(450, 304, 380, 218),
-            pygame.Rect(802, 545, 190, 58),
-            pygame.Rect(1008, 545, 190, 58),
+            pygame.Rect(760, 545, 200, 58),
+            pygame.Rect(980, 545, 250, 58),
         )
         return next(
             (index for index, rect in enumerate(regions) if rect.collidepoint(position)), None
@@ -443,7 +441,7 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                     "Remap P1 light",
                 ],
                 "controls": [
-                    "P1: arrows + Z/X/C/V/B",
+                    "P1: arrows + A/S/D/F/G",
                     "CPU opponent: Easy / Medium / Hard",
                     "Controller: D-pad + buttons 0/1/2/3",
                     "Remap via settings.json",
