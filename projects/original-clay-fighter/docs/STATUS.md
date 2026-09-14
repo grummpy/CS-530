@@ -52,3 +52,10 @@ Python 3.12 validation evidence is retained in
 `evidence/CYCLE_9_PACKAGING_QUALITY_REPORT_2026-09-13.md`. Windows
 target-floor installed-package smoke remains a CI/evidence gate until its
 Windows run is retained.
+
+Cycle 10 release-candidate process documentation is complete. The readiness
+checklist, external beta plan/forms, matchup/balance matrix, defect triage
+criteria, release/support/rollback plan, and final decision record are under
+`docs/release/`. The current decision is no-go: Windows target-floor
+installed-package smoke and human external playtests are external pending
+evidence and no outcome has been inferred for either.

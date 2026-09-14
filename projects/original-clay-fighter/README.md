@@ -38,3 +38,11 @@ python scripts/verify_artifacts.py
 `artifacts/` contains `SHA256SUMS`, build metadata, and a CycloneDX SBOM.
 The `Package quality` workflow performs the same checks plus a clean wheel
 install, SDL-dummy smoke test, uninstall, and remnant-import check.
+
+## Release-candidate process
+
+The current release-candidate disposition, evidence checklist, external beta
+forms, balance matrix, defect triage, support, and rollback procedure are in
+[`docs/CYCLE_10_RELEASE_CANDIDATE_READINESS.md`](docs/CYCLE_10_RELEASE_CANDIDATE_READINESS.md).
+The current status is no-go pending external Windows target-floor
+installed-package smoke and human external playtest evidence.
