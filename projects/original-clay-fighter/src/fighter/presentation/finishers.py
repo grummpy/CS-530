@@ -11,7 +11,6 @@ from fighter.resource_paths import asset_root
 
 FRAME_COUNT = 30
 SOURCE_SIZE = (640, 360)
-DISPLAY_SIZE = (1280, 720)
 DEFAULT_CACHE_BYTES = 48 * 1024 * 1024
 
 
@@ -119,13 +118,13 @@ class FinisherPlayback:
             return False
         index = self._next_frame
         try:
-            source = pygame.image.load(self._variant.frames[index].as_posix()).convert_alpha()
-            frame = pygame.transform.smoothscale(source, DISPLAY_SIZE)
+            frame = pygame.image.load(self._variant.frames[index].as_posix()).convert_alpha()
+            cached = self.cache.put(index, frame)
         except (OSError, pygame.error, ValueError, AttributeError):
             self._failure("Finisher media failed — showing results.")
             return False
         self._next_frame += 1
-        if not self.cache.put(index, frame):
+        if not cached:
             self._failure("Finisher exceeds cache budget — showing results.")
             return False
         return True
@@ -144,4 +143,6 @@ def fallback_card(pygame: Any, screen: Any, font: Any, label: str, diagnostic: s
     overlay.fill((6, 8, 15, 225))
     screen.blit(overlay, (0, 0))
     screen.blit(pygame.font.Font(None, 70).render(label, True, (255, 235, 150)), (350, 280))
-    screen.blit(font.render(diagnostic or "Finisher unavailable", True, (255, 255, 255)), (410, 360))
+    screen.blit(
+        font.render(diagnostic or "Finisher unavailable", True, (255, 255, 255)), (410, 360)
+    )

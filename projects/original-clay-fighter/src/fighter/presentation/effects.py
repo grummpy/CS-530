@@ -21,16 +21,38 @@ class ClayEffectPool:
     effects: list[ClayEffect] = field(default_factory=list)
 
     def trigger(self, event: PresentationEvent, reduced: bool = False) -> None:
-        style = {"hit": "impact", "block": "block", "throw": "crumb", "throw_tech": "block",
-                 "land": "dust", "ko": "ko", "result": "meter"}.get(event.kind)
+        special_moves = {
+            "star_chord",
+            "hostile_takeover",
+            "patriot_prototype_exosuit",
+            "kitchen_rush",
+        }
+        style = {
+            "hit": "impact",
+            "block": "block",
+            "throw": "crumb",
+            "throw_tech": "block",
+            "land": "dust",
+            "ko": "ko",
+            "result": "meter",
+        }.get(event.kind)
+        if event.kind == "hit" and event.payload.move in special_moves:
+            style = "special"
         if style is None or (reduced and event.kind in {"land", "result"}):
             return
-        effect = ClayEffect(style, event.position, 18 if event.kind == "hit" else 30,
-                            event.kind in {"hit", "block", "ko"})
+        effect = ClayEffect(
+            style,
+            event.position,
+            18 if event.kind == "hit" else 30,
+            event.kind in {"hit", "block", "ko"},
+        )
         if len(self.effects) == self.capacity:
             self.effects.pop(0)
         self.effects.append(effect)
 
     def advance(self) -> None:
-        self.effects = [ClayEffect(item.kind, item.position, item.ttl - 1, item.essential)
-                        for item in self.effects if item.ttl > 1]
+        self.effects = [
+            ClayEffect(item.kind, item.position, item.ttl - 1, item.essential)
+            for item in self.effects
+            if item.ttl > 1
+        ]

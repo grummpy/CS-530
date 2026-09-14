@@ -49,7 +49,9 @@ def _mapping(raw: object, context: str) -> dict[str, Any]:
     return raw
 
 
-def _string(raw: Mapping[str, Any], key: str, context: str, *, optional: bool = False) -> str | None:
+def _string(
+    raw: Mapping[str, Any], key: str, context: str, *, optional: bool = False
+) -> str | None:
     value = raw.get(key)
     if optional and value is None:
         return None
@@ -134,12 +136,20 @@ def _move(
     if cancel_raw is not None:
         values = _mapping(cancel_raw, f"{context}.cancels")
         targets = values.get("targets")
-        if not isinstance(targets, list) or not all(isinstance(target, str) and target for target in targets):
+        if not isinstance(targets, list) or not all(
+            isinstance(target, str) and target for target in targets
+        ):
             raise ContentValidationError(f"{context}.cancels.targets must be a string list")
         cancels = tuple(targets)
         cancel_start, cancel_end = _frames(values.get("frames"), f"{context}.cancels.frames")
-        if cancel_end > total or not isinstance(values.get("on_hit"), bool) or not isinstance(values.get("on_block"), bool):
-            raise ContentValidationError(f"{context}.cancels must declare valid frames, on_hit, and on_block")
+        if (
+            cancel_end > total
+            or not isinstance(values.get("on_hit"), bool)
+            or not isinstance(values.get("on_block"), bool)
+        ):
+            raise ContentValidationError(
+                f"{context}.cancels must declare valid frames, on_hit, and on_block"
+            )
         cancel_on_hit, cancel_on_block = values["on_hit"], values["on_block"]
         if move_id in cancels:
             raise ContentValidationError(f"{context}.cancels may not self-loop")
@@ -156,7 +166,9 @@ def _move(
         knockback_y=0,
         hit_level=_hit_level(raw, context),
         meter_gain=damage,
-        meter_cost=_integer(raw, "charge_requirement", context) if "charge_requirement" in raw else 0,
+        meter_cost=_integer(raw, "charge_requirement", context)
+        if "charge_requirement" in raw
+        else 0,
         hitboxes=(HitboxWindow(start, end, hitbox),),
         animation=move_id,
         events=((start, "hit"),),
@@ -175,7 +187,9 @@ def _profile(raw: Mapping[str, Any], fighter_id: str, context: str) -> FighterPr
     special_id = _string(raw, "special", context, optional=True)
     armor = raw.get("armor_mode")
     if armor is None:
-        return FighterProfile(fighter_id, _string(raw, "display_name", context) or "", moves_id or "", special_id)
+        return FighterProfile(
+            fighter_id, _string(raw, "display_name", context) or "", moves_id or "", special_id
+        )
     values = _mapping(armor, f"{context}.armor_mode")
     return FighterProfile(
         fighter_id,
@@ -197,9 +211,13 @@ def _fighter_definition(fighter_id: str) -> FighterDefinition:
     moves_raw = _load_yaml(root / "moves" / f"{profile.moves_id}.yaml")
     boxes_raw = _load_yaml(root / "boxes" / f"{fighter_id}.yaml")
     if moves_raw.get("schema") != "fighter.moves.v1" or moves_raw.get("fighter_id") != fighter_id:
-        raise ContentValidationError(f"moves/{fighter_id}.yaml must declare matching fighter.moves.v1 identity")
+        raise ContentValidationError(
+            f"moves/{fighter_id}.yaml must declare matching fighter.moves.v1 identity"
+        )
     if boxes_raw.get("schema") != "fighter.boxes.v1" or boxes_raw.get("fighter_id") != fighter_id:
-        raise ContentValidationError(f"boxes/{fighter_id}.yaml must declare matching fighter.boxes.v1 identity")
+        raise ContentValidationError(
+            f"boxes/{fighter_id}.yaml must declare matching fighter.boxes.v1 identity"
+        )
     push_box = _box(boxes_raw.get("push_box"), f"boxes/{fighter_id}.yaml.push_box")
     hurt_box = _box(boxes_raw.get("hurt_box"), f"boxes/{fighter_id}.yaml.hurt_box")
     move_boxes = _mapping(boxes_raw.get("moves"), f"boxes/{fighter_id}.yaml.moves")
@@ -211,7 +229,9 @@ def _fighter_definition(fighter_id: str) -> FighterDefinition:
         moves[move_name] = _move(move_name, spec, box_spec, f"{fighter_id}.{move_name}")
     for move in moves.values():
         if any(target not in moves for target in move.cancels):
-            raise ContentValidationError(f"{fighter_id}.{move.move_id}.cancels targets an unknown move")
+            raise ContentValidationError(
+                f"{fighter_id}.{move.move_id}.cancels targets an unknown move"
+            )
     visiting: set[str] = set()
     visited: set[str] = set()
 
@@ -239,7 +259,10 @@ def _fighter_definition(fighter_id: str) -> FighterDefinition:
             moves[profile.special_id] = _move(
                 profile.special_id,
                 spec,
-                _mapping(move_boxes.get(profile.special_id), f"boxes/{fighter_id}.yaml.moves.{profile.special_id}"),
+                _mapping(
+                    move_boxes.get(profile.special_id),
+                    f"boxes/{fighter_id}.yaml.moves.{profile.special_id}",
+                ),
                 f"{fighter_id}.{profile.special_id}",
             )
     return FighterDefinition(profile, MappingProxyType(moves), push_box, hurt_box)
@@ -253,7 +276,9 @@ def load_catalog() -> Mapping[str, FighterDefinition]:
 
         authored = ("rhinestone_angel", "mr_president", "tech_billionaire", "master_chef")
         catalog = {fighter_id: _fighter_definition(fighter_id) for fighter_id in authored}
-        graybox_profile = FighterProfile("graybox_rival", "Graybox Rival", "graybox_rival", "special")
+        graybox_profile = FighterProfile(
+            "graybox_rival", "Graybox Rival", "graybox_rival", "special"
+        )
         graybox_moves = {
             **MOVES,
             "light": replace(MOVES["5L"], move_id="light", cancels=("medium",)),

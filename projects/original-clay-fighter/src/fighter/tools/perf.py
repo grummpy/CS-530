@@ -27,14 +27,16 @@ def report(ticks: int = 6_000) -> dict[str, Any]:
 def raw_report(ticks: int = 6_000) -> dict[str, Any]:
     """Capture raw timing/RSS/build metadata without claiming render measurements."""
     sample = report(ticks)
-    sample.update({
-        "python": platform.python_version(),
-        "platform": platform.platform(),
-        "rss_bytes": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        * (1 if sys.platform == "darwin" else 1024),
-        "cache_bytes": 0,
-        "measurement": "headless simulation only",
-    })
+    sample.update(
+        {
+            "python": platform.python_version(),
+            "platform": platform.platform(),
+            "rss_bytes": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+            * (1 if sys.platform == "darwin" else 1024),
+            "cache_bytes": 0,
+            "measurement": "headless simulation only",
+        }
+    )
     return sample
 
 

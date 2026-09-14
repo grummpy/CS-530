@@ -89,7 +89,10 @@ def test_movement_walls_pushboxes_and_facing_are_symmetric():
     game.match.p1.x, game.match.p2.x = 100, 160
     game.tick((InputFrame.from_held(0, Action.RIGHT), InputFrame.from_held(0, Action.LEFT)))
     left, right = sorted((game.match.p1, game.match.p2), key=lambda fighter: fighter.x)
-    assert left.x + left.definition.push_box.x + left.definition.push_box.w <= right.x + right.definition.push_box.x
+    assert (
+        left.x + left.definition.push_box.x + left.definition.push_box.w
+        <= right.x + right.definition.push_box.x
+    )
     assert (game.match.p1.facing, game.match.p2.facing) == (1, -1)
     game.match.p1.x = 80 - game.match.p1.definition.push_box.x
     game.tick((InputFrame.from_held(0, Action.LEFT), InputFrame()))
@@ -115,8 +118,13 @@ def test_jump_landing_and_locked_states_are_tick_authoritative():
 
 @pytest.mark.parametrize(
     ("held", "move", "expected_block"),
-    [(Action.RIGHT, "light", True), (Action.DOWN | Action.RIGHT, "light", True),
-     (Action.RIGHT, "2L", False), (Action.DOWN | Action.RIGHT, "2L", True), (Action.LEFT, "light", False)],
+    [
+        (Action.RIGHT, "light", True),
+        (Action.DOWN | Action.RIGHT, "light", True),
+        (Action.RIGHT, "2L", False),
+        (Action.DOWN | Action.RIGHT, "2L", True),
+        (Action.LEFT, "light", False),
+    ],
 )
 def test_directional_guard_matrix(held, move, expected_block):
     game = SessionKernel()
@@ -178,7 +186,9 @@ def test_results_are_immutable_for_ko_double_ko_timeout_and_training():
     timeout.match.round_ticks = 1
     timeout.match.p1.health = 900
     timeout.tick()
-    assert timeout.match.result is not None and timeout.match.result.reason is ResultReason.TIMEOUT_WIN
+    assert (
+        timeout.match.result is not None and timeout.match.result.reason is ResultReason.TIMEOUT_WIN
+    )
     training = SessionKernel(training=1)
     training.match.round_ticks = 1
     training.tick()
@@ -187,8 +197,7 @@ def test_results_are_immutable_for_ko_double_ko_timeout_and_training():
 
 def test_identical_input_replay_has_same_digest_at_30_60_and_144_hz():
     stream = [
-        (Action.RIGHT if tick < 30 else Action.LEFT if tick < 60 else 0, 0)
-        for tick in range(120)
+        (Action.RIGHT if tick < 30 else Action.LEFT if tick < 60 else 0, 0) for tick in range(120)
     ]
     snapshots = []
     for render_hz in (30, 60, 144):

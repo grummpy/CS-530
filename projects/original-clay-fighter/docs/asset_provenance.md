@@ -25,3 +25,9 @@ concept images, and five runtime PCM WAV tracks. The previously claimed 51
 synthesized placeholder WAV files and one graybox turnaround are not present.
 The per-file release manifest, hashes, and export-version checks remain Cycle 2
 work.
+
+The four `premium_pose_sheet_v1.png` files were generated from the approved
+character sheets on 2026-09-13. The tracked
+`art_source/characters/build_premium_runtime_frames.py` script produces 16
+transparent 512×512 gameplay poses per fighter and rewires each manifest clip
+to the matching premium action pose.

@@ -8,7 +8,9 @@ from typing import Literal
 from fighter.sim.enums import ResultReason
 
 PRESENTATION_EVENT_VERSION = 1
-PresentationKind = Literal["hit", "block", "throw", "throw_tech", "land", "ko", "finisher", "result"]
+PresentationKind = Literal[
+    "hit", "block", "throw", "throw_tech", "land", "ko", "finisher", "result"
+]
 
 
 @dataclass(frozen=True, slots=True)

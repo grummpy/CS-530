@@ -11,7 +11,7 @@ from fighter.sim.kernel import SessionKernel
 
 def test_router_converts_physical_state_to_tick_edges_without_shell_leakage() -> None:
     router = InputRouter()
-    router.event("key", "key:102", True)
+    router.event("key", "key:106", True)
     router.event("key", "key:13", True)
     first = router.frames()[0]
     assert first.held == Action.LIGHT and first.pressed == Action.LIGHT
@@ -77,13 +77,13 @@ def test_invalid_or_corrupt_settings_recover_to_defaults(tmp_path, payload) -> N
     path = tmp_path / "settings.json"
     path.write_text(json.dumps(payload), encoding="utf-8")
     settings, diagnostic = load(path)
-    assert diagnostic is not None and settings.version == 2
+    assert diagnostic is not None and settings.version == 3
     with pytest.raises(ValueError):
         validate(payload)
 
 
 def test_version_zero_settings_migrate_to_current_defaults() -> None:
-    assert validate({"version": 0}).version == 2
+    assert validate({"version": 0}).version == 3
 
 
 def test_training_reset_and_move_list_onboarding_are_reachable() -> None:

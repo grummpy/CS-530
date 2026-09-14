@@ -13,8 +13,16 @@ from fighter.sim.kernel import SessionKernel
 
 
 def _event(event_id: int, kind: str = "hit") -> PresentationEvent:
-    return PresentationEvent(PRESENTATION_EVENT_VERSION, event_id, 4, kind, 1, 2, (400, 600),
-                             PresentationPayload("light", 40))
+    return PresentationEvent(
+        PRESENTATION_EVENT_VERSION,
+        event_id,
+        4,
+        kind,
+        1,
+        2,
+        (400, 600),
+        PresentationPayload("light", 40),
+    )
 
 
 def test_events_are_immutable_monotonic_and_checksum_exempt() -> None:
@@ -30,8 +38,12 @@ def test_events_are_immutable_monotonic_and_checksum_exempt() -> None:
         baseline.tick()
         if game.presentation_events():
             events = game.presentation_events()
-    assert events and [event.event_id for event in events] == sorted(event.event_id for event in events)
-    assert all(event.version == PRESENTATION_EVENT_VERSION and event.payload.move for event in events)
+    assert events and [event.event_id for event in events] == sorted(
+        event.event_id for event in events
+    )
+    assert all(
+        event.version == PRESENTATION_EVENT_VERSION and event.payload.move for event in events
+    )
     assert game.checksum() == baseline.checksum()
     first_id = events[0].event_id
     game.reset()
@@ -86,8 +98,11 @@ def test_audio_safe_mode_survives_init_load_and_channel_failures() -> None:
     assert AudioLevels(master=50, music=50).gain("music") == 0.25
 
     class ReadyMixer:
-        music = SimpleNamespace(load=lambda _: (_ for _ in ()).throw(OSError("bad asset")),
-                               set_volume=lambda _: None, play=lambda *args, **kwargs: None)
+        music = SimpleNamespace(
+            load=lambda _: (_ for _ in ()).throw(OSError("bad asset")),
+            set_volume=lambda _: None,
+            play=lambda *args, **kwargs: None,
+        )
 
         def get_init(self):
             return (48000, -16, 2)
@@ -112,7 +127,7 @@ def test_audio_safe_mode_survives_init_load_and_channel_failures() -> None:
 
 def test_audio_settings_migrate_and_bound_levels() -> None:
     settings = validate({"version": 1, "audio": {"master": 25, "muted": ["music"]}})
-    assert settings.version == 2 and settings.audio.master == 25 and settings.audio.music == 55
+    assert settings.version == 3 and settings.audio.master == 25 and settings.audio.music == 55
     try:
         validate({"audio": {"sfx": 101}})
     except ValueError:

@@ -33,9 +33,10 @@ fresh virtual environment with the runtime lock before approving a release.
 ## Controls and settings
 
 All windowed input travels through semantic actions before the fixed-tick
-simulation adapter. Keyboard defaults are P1 `A/D/W/S`, `F/G/H/J/T` and P2
+simulation adapter. Keyboard defaults are P1 `A/D/W/S`, `J/K/L/I/U` and P2
 arrows plus keypad `1/2/3/0/5`; a connected controller uses D-pad, buttons
 `0–4` for combat, and buttons `7/8/9` for pause/back/confirm. Menus support
 arrows or D-pad with Enter/controller confirm. Settings are stored outside the
 installation in the user configuration directory and can be changed from the
-Settings menu, including a capture-based P1-light remap.
+Settings menu, including a capture-based P1-light remap. Every menu button also
+supports mouse hover and left-click activation; right-click performs Back.

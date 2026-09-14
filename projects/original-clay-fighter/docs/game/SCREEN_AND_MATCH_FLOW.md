@@ -33,7 +33,11 @@ sequence; the fighter with more health wins a timeout.
 
 | Player | Move | Block | Attacks |
 | --- | --- | --- | --- |
-| Player 1 | `A` / `D` | `S` | `F` light, `G` medium, `H` heavy, `J` special |
-| Player 2 | Left / Right | Down | Keypad `1` light, `2` medium, `3` heavy, `0` special |
+| Player 1 | `A` / `D`; `W` jump | `S` crouch/back | `J` light, `K` medium, `L` heavy, `I` special, `U` throw |
+| Player 2 | Left / Right; Up jump | Down crouch/back | Keypad `1` light, `2` medium, `3` heavy, `0` special, `5` throw |
 
 `R` resets the match and `Esc` exits the window.
+
+Menu controls support arrow keys or D-pad plus Enter/controller confirm. Moving
+the mouse changes focus to the hovered button, left-click activates the same
+command as Enter, and right-click performs Back.

@@ -23,9 +23,14 @@ class ResultPayload:
     finisher_variant: str | None = None
 
     def snapshot(self) -> dict[str, int | str | None]:
-        return {"reason": self.reason.name, "winner": self.winner, "tick": self.tick,
-                "p1_health": self.p1_health, "p2_health": self.p2_health,
-                "finisher_variant": self.finisher_variant}
+        return {
+            "reason": self.reason.name,
+            "winner": self.winner,
+            "tick": self.tick,
+            "p1_health": self.p1_health,
+            "p2_health": self.p2_health,
+            "finisher_variant": self.finisher_variant,
+        }
 
 
 @dataclass(slots=True)
@@ -58,15 +63,29 @@ class FighterState:
         return self.y < GROUND_Y
 
     def snapshot(self) -> dict[str, int | str | bool]:
-        return {"id": self.fighter_id, "x": self.x, "y": self.y, "vy": self.vy,
-                "health": self.health, "facing": self.facing, "mode": self.mode.name,
-                "state_ticks": self.state_ticks, "attack_ticks": self.attack_ticks,
-                "stun_ticks": self.stun_ticks, "attack_kind": self.attack_kind,
-                "attack_move": self.attack_move, "hit": self.hit_this_attack,
-                "attack_confirm": self.attack_confirm, "cancel_depth": self.cancel_depth,
-                "combo_count": self.combo_count, "armor_charge": self.armor_charge,
-                "armor_ticks": self.armor_ticks, "special_charge": self.special_charge,
-                "blocking": self.blocking, "throw_tech_until": self.throw_tech_until}
+        return {
+            "id": self.fighter_id,
+            "x": self.x,
+            "y": self.y,
+            "vy": self.vy,
+            "health": self.health,
+            "facing": self.facing,
+            "mode": self.mode.name,
+            "state_ticks": self.state_ticks,
+            "attack_ticks": self.attack_ticks,
+            "stun_ticks": self.stun_ticks,
+            "attack_kind": self.attack_kind,
+            "attack_move": self.attack_move,
+            "hit": self.hit_this_attack,
+            "attack_confirm": self.attack_confirm,
+            "cancel_depth": self.cancel_depth,
+            "combo_count": self.combo_count,
+            "armor_charge": self.armor_charge,
+            "armor_ticks": self.armor_ticks,
+            "special_charge": self.special_charge,
+            "blocking": self.blocking,
+            "throw_tech_until": self.throw_tech_until,
+        }
 
 
 @dataclass(slots=True)
@@ -85,15 +104,30 @@ class MatchState:
     phase_ticks: int = 0
 
     def snapshot(self) -> dict[str, object]:
-        return {"seed": self.seed, "tick": self.tick, "phase": self.phase.name,
-                "training": self.training, "p1": self.p1.snapshot(), "p2": self.p2.snapshot(),
-                "round_ticks": self.round_ticks,
-                "phase_ticks": self.phase_ticks,
-                "result": self.result.snapshot() if self.result else None}
+        return {
+            "seed": self.seed,
+            "tick": self.tick,
+            "phase": self.phase.name,
+            "training": self.training,
+            "p1": self.p1.snapshot(),
+            "p2": self.p2.snapshot(),
+            "round_ticks": self.round_ticks,
+            "phase_ticks": self.phase_ticks,
+            "result": self.result.snapshot() if self.result else None,
+        }
 
 
-def initial_match(seed: int, p1_id: str, p2_id: str, training: int,
-                  p1_definition: FighterDefinition, p2_definition: FighterDefinition) -> MatchState:
-    return MatchState(seed, FighterState(p1_id, P1_SPAWN_X, p1_definition),
-                      FighterState(p2_id, P2_SPAWN_X, p2_definition, facing=-1),
-                      training=training)
+def initial_match(
+    seed: int,
+    p1_id: str,
+    p2_id: str,
+    training: int,
+    p1_definition: FighterDefinition,
+    p2_definition: FighterDefinition,
+) -> MatchState:
+    return MatchState(
+        seed,
+        FighterState(p1_id, P1_SPAWN_X, p1_definition),
+        FighterState(p2_id, P2_SPAWN_X, p2_definition, facing=-1),
+        training=training,
+    )

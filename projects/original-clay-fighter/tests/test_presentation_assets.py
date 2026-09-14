@@ -21,7 +21,20 @@ from fighter.sim.enums import FighterMode
 
 def test_manifest_clock_honors_8_and_12_fps_for_ten_seconds() -> None:
     assert [frame_index(tick, 8, 4) for tick in range(0, 600, 75)] == [0, 2, 0, 2, 0, 2, 0, 2]
-    assert [frame_index(tick, 12, 4) for tick in range(0, 600, 50)] == [0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2]
+    assert [frame_index(tick, 12, 4) for tick in range(0, 600, 50)] == [
+        0,
+        2,
+        0,
+        2,
+        0,
+        2,
+        0,
+        2,
+        0,
+        2,
+        0,
+        2,
+    ]
     assert frame_index(599, 8, 4) == 3
     assert frame_index(599, 12, 4) == 3
 
@@ -38,16 +51,27 @@ def test_every_reachable_mode_move_guard_and_result_resolves_to_existing_clip() 
     for fighter_id in SELECTABLE_FIGHTERS:
         manifest = load_manifest(fighter_id)
         fighter = SimpleNamespace(
-            fighter_id=fighter_id, mode=FighterMode.NEUTRAL, attack_move="", attack_kind=0, armor_ticks=0
+            fighter_id=fighter_id,
+            mode=FighterMode.NEUTRAL,
+            attack_move="",
+            attack_kind=0,
+            armor_ticks=0,
         )
         for mode in FighterMode:
             fighter.mode = mode
             clip, _ = resolve_clip(manifest, fighter, held=Action.DOWN)
             assert clip in manifest.clips
         fighter.mode = FighterMode.ATTACK
-        for move in ("light", "medium", "heavy", *(
-            name for name in manifest.clips if name in {"kitchen_rush", "hostile_takeover", "star_chord"}
-        )):
+        for move in (
+            "light",
+            "medium",
+            "heavy",
+            *(
+                name
+                for name in manifest.clips
+                if name in {"kitchen_rush", "hostile_takeover", "star_chord"}
+            ),
+        ):
             fighter.attack_move = move
             clip, _ = resolve_clip(manifest, fighter)
             assert clip in manifest.clips
@@ -112,4 +136,5 @@ def test_transform_cache_reuses_scaled_and_flipped_frames() -> None:
     second = cache.load_clip(pygame, manifest, "idle", 1)
     mirrored = cache.load_clip(pygame, manifest, "idle", -1)
     assert first is second and mirrored is not first
-    assert calls == {"load": 8, "scale": 8, "flip": 8}
+    expected = len(manifest.clips["idle"].frames) * 2
+    assert calls == {"load": expected, "scale": expected, "flip": expected}

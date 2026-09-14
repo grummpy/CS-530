@@ -1,11 +1,133 @@
 {
   "schema": "fighter.sprite-manifest.v1",
   "fighter_id": "tech_billionaire",
-  "pivot": {"x": 256, "y": 480},
-  "source": "sprites/*.png",
-  "usage": "Transparent Blender runtime frames. Armor clips are activated by the deterministic armor-mode state.",
+  "pivot": {
+    "x": 256,
+    "y": 500
+  },
+  "source": "sprites/premium_*.png",
+  "usage": "Premium approved clay pose sheet frames wired to gameplay states",
   "clips": {
-    "idle": {"frames": ["idle_00.png", "idle_01.png", "idle_02.png", "idle_03.png"], "fps": 8}, "walk": {"frames": ["walk_00.png", "walk_01.png", "walk_02.png", "walk_03.png"], "fps": 12}, "run": {"frames": ["run_00.png", "run_01.png", "run_02.png", "run_03.png"], "fps": 12}, "jump": {"frames": ["jump_00.png", "jump_01.png", "jump_02.png", "jump_03.png"], "fps": 12}, "crouch": {"frames": ["crouch_00.png"], "fps": 8}, "block_high": {"frames": ["block_high_00.png"], "fps": 8}, "block_low": {"frames": ["block_low_00.png"], "fps": 8}, "light": {"frames": ["light_00.png"], "fps": 12}, "medium": {"frames": ["medium_00.png"], "fps": 12}, "heavy": {"frames": ["heavy_00.png"], "fps": 12}, "exosuit_call": {"frames": ["exosuit_call_00.png"], "fps": 12}, "armor_idle": {"frames": ["armor_idle_00.png", "armor_idle_01.png", "armor_idle_02.png", "armor_idle_03.png"], "fps": 8}, "armor_punch": {"frames": ["armor_punch_00.png"], "fps": 12}, "armor_kick": {"frames": ["armor_kick_00.png"], "fps": 12}, "hit": {"frames": ["hit_00.png"], "fps": 12}, "knockdown": {"frames": ["knockdown_00.png"], "fps": 8}, "wake": {"frames": ["wake_00.png"], "fps": 8}, "intro": {"frames": ["intro_00.png"], "fps": 8}, "win": {"frames": ["win_00.png"], "fps": 8}, "lose": {"frames": ["lose_00.png"], "fps": 8}
+    "idle": {
+      "frames": [
+        "premium_00.png"
+      ],
+      "fps": 8
+    },
+    "walk": {
+      "frames": [
+        "premium_01.png"
+      ],
+      "fps": 12
+    },
+    "run": {
+      "frames": [
+        "premium_02.png"
+      ],
+      "fps": 12
+    },
+    "jump": {
+      "frames": [
+        "premium_03.png"
+      ],
+      "fps": 12
+    },
+    "crouch": {
+      "frames": [
+        "premium_04.png"
+      ],
+      "fps": 8
+    },
+    "block_high": {
+      "frames": [
+        "premium_05.png"
+      ],
+      "fps": 8
+    },
+    "block_low": {
+      "frames": [
+        "premium_06.png"
+      ],
+      "fps": 8
+    },
+    "light": {
+      "frames": [
+        "premium_07.png"
+      ],
+      "fps": 12
+    },
+    "medium": {
+      "frames": [
+        "premium_08.png"
+      ],
+      "fps": 12
+    },
+    "heavy": {
+      "frames": [
+        "premium_09.png"
+      ],
+      "fps": 12
+    },
+    "exosuit_call": {
+      "frames": [
+        "premium_10.png"
+      ],
+      "fps": 12
+    },
+    "armor_idle": {
+      "frames": [
+        "premium_10.png"
+      ],
+      "fps": 8
+    },
+    "armor_punch": {
+      "frames": [
+        "premium_08.png"
+      ],
+      "fps": 12
+    },
+    "armor_kick": {
+      "frames": [
+        "premium_09.png"
+      ],
+      "fps": 12
+    },
+    "hit": {
+      "frames": [
+        "premium_11.png"
+      ],
+      "fps": 12
+    },
+    "knockdown": {
+      "frames": [
+        "premium_12.png"
+      ],
+      "fps": 8
+    },
+    "wake": {
+      "frames": [
+        "premium_13.png"
+      ],
+      "fps": 8
+    },
+    "intro": {
+      "frames": [
+        "premium_00.png"
+      ],
+      "fps": 8
+    },
+    "win": {
+      "frames": [
+        "premium_14.png"
+      ],
+      "fps": 8
+    },
+    "lose": {
+      "frames": [
+        "premium_15.png"
+      ],
+      "fps": 8
+    }
   },
   "status": "Blender master and armor-mode clip library are authored for runtime integration."
 }

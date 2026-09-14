@@ -45,9 +45,13 @@ class StageReadability:
 
 
 STAGE_READABILITY: dict[str, StageReadability] = {
-    "roadside_truck_stop": StageReadability((22, 16, 8, 42), ((20, 18, 540, 54), (720, 18, 540, 54))),
+    "roadside_truck_stop": StageReadability(
+        (22, 16, 8, 42), ((20, 18, 540, 54), (720, 18, 540, 54))
+    ),
     "executive_lawn": StageReadability((5, 25, 16, 42), ((20, 18, 540, 54), (720, 18, 540, 54))),
-    "electric_assembly_hall": StageReadability((14, 10, 30, 45), ((20, 18, 540, 54), (720, 18, 540, 54))),
+    "electric_assembly_hall": StageReadability(
+        (14, 10, 30, 45), ((20, 18, 540, 54), (720, 18, 540, 54))
+    ),
 }
 
 
@@ -67,7 +71,10 @@ def load_manifest(fighter_id: str) -> SpriteManifest:
         raise ValueError(f"sprite manifest identity does not match {fighter_id}")
     if (
         not isinstance(pivot, dict)
-        or any(isinstance(pivot.get(key), bool) or not isinstance(pivot.get(key), int) for key in ("x", "y"))
+        or any(
+            isinstance(pivot.get(key), bool) or not isinstance(pivot.get(key), int)
+            for key in ("x", "y")
+        )
         or not clips
     ):
         raise ValueError(f"invalid sprite manifest pivot or clips for {fighter_id}")
@@ -75,7 +82,10 @@ def load_manifest(fighter_id: str) -> SpriteManifest:
         if clip.fps not in (8, 12) or not clip.frames:
             raise ValueError(f"invalid clip cadence for {fighter_id}:{clip.name}")
         for frame in clip.frames:
-            if not isinstance(frame, str) or not (asset_root() / "characters" / fighter_id / "sprites" / frame).is_file():
+            if (
+                not isinstance(frame, str)
+                or not (asset_root() / "characters" / fighter_id / "sprites" / frame).is_file()
+            ):
                 raise ValueError(f"missing frame for {fighter_id}:{clip.name}")
     return SpriteManifest(fighter_id, (pivot["x"], pivot["y"]), clips)
 
@@ -112,7 +122,13 @@ def readability_profile(stage_id: str) -> StageReadability:
 def result_clip_route(stage_id: str, result_reason: str) -> str:
     """Map results to existing presentation labels; never loads finisher media."""
     readability_profile(stage_id)
-    return "double_ko" if result_reason == "DOUBLE_KO" else "ko" if result_reason == "KO" else "timeout"
+    return (
+        "double_ko"
+        if result_reason == "DOUBLE_KO"
+        else "ko"
+        if result_reason == "KO"
+        else "timeout"
+    )
 
 
 def frame_index(tick: int, fps: int, frame_count: int) -> int:
@@ -122,7 +138,9 @@ def frame_index(tick: int, fps: int, frame_count: int) -> int:
     return (tick * fps // 60) % frame_count
 
 
-def resolved_pivot(pivot: tuple[int, int], source_size: tuple[int, int]) -> tuple[tuple[int, int], str | None]:
+def resolved_pivot(
+    pivot: tuple[int, int], source_size: tuple[int, int]
+) -> tuple[tuple[int, int], str | None]:
     """Validate a source-space pivot; malformed source data uses lower-center."""
     width, height = source_size
     x, y = pivot
@@ -138,7 +156,11 @@ def resolved_pivot(pivot: tuple[int, int], source_size: tuple[int, int]) -> tupl
 
 
 def placement(
-    fighter_x: int, fighter_y: int, pivot: tuple[int, int], source_size: tuple[int, int], scale: float
+    fighter_x: int,
+    fighter_y: int,
+    pivot: tuple[int, int],
+    source_size: tuple[int, int],
+    scale: float,
 ) -> tuple[int, int]:
     """Place a scaled frame so its resolved pivot touches simulation ground."""
     pivot, _ = resolved_pivot(pivot, source_size)
@@ -164,7 +186,11 @@ _MODE_CLIPS = {
 
 
 def resolve_clip(
-    manifest: SpriteManifest, fighter: Any, held: int = 0, result_winner: int | None = None, player: int = 0
+    manifest: SpriteManifest,
+    fighter: Any,
+    held: int = 0,
+    result_winner: int | None = None,
+    player: int = 0,
 ) -> tuple[str, str | None]:
     """Map every Cycle 4 state to an existing clip or a named approved fallback."""
     if result_winner is not None:
@@ -197,7 +223,9 @@ class TransformCache:
     frames: dict[tuple[str, str, int], tuple[object, ...]] = field(default_factory=dict)
     diagnostics: list[str] = field(default_factory=list)
 
-    def load_clip(self, pygame: Any, manifest: SpriteManifest, clip_name: str, facing: int) -> tuple[object, ...]:
+    def load_clip(
+        self, pygame: Any, manifest: SpriteManifest, clip_name: str, facing: int
+    ) -> tuple[object, ...]:
         key = (manifest.fighter_id, clip_name, facing)
         if key in self.frames:
             return self.frames[key]

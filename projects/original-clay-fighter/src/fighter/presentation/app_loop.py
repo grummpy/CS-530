@@ -26,15 +26,32 @@ def _event_token(pygame: Any, event: Any) -> tuple[str, str, bool, int | None] |
     if event.type in (pygame.KEYDOWN, pygame.KEYUP):
         return "key", f"key:{event.key}", event.type == pygame.KEYDOWN, None
     if event.type in (pygame.JOYBUTTONDOWN, pygame.JOYBUTTONUP):
-        return "button", f"button:{event.button}", event.type == pygame.JOYBUTTONDOWN, event.instance_id
+        return (
+            "button",
+            f"button:{event.button}",
+            event.type == pygame.JOYBUTTONDOWN,
+            event.instance_id,
+        )
     if event.type == pygame.JOYHATMOTION:
-        direction = {(0, 1): "up", (0, -1): "down", (-1, 0): "left", (1, 0): "right"}.get(event.value)
-        return ("hat", f"hat:{direction}", bool(direction), event.instance_id) if direction else None
+        direction = {(0, 1): "up", (0, -1): "down", (-1, 0): "left", (1, 0): "right"}.get(
+            event.value
+        )
+        return (
+            ("hat", f"hat:{direction}", bool(direction), event.instance_id) if direction else None
+        )
     return None
 
 
-def _draw_menu(pygame: Any, screen: Any, font: Any, shell: Shell, title: str,
-               entries: list[str], detail: str, high_contrast: bool) -> None:
+def _draw_menu(
+    pygame: Any,
+    screen: Any,
+    font: Any,
+    shell: Shell,
+    title: str,
+    entries: list[str],
+    detail: str,
+    high_contrast: bool,
+) -> None:
     screen.fill((18, 18, 26))
     big = pygame.font.Font(None, 62)
     screen.blit(big.render(title, True, (255, 230, 120)), (80, 70))
@@ -42,23 +59,43 @@ def _draw_menu(pygame: Any, screen: Any, font: Any, shell: Shell, title: str,
     for index, entry in enumerate(entries):
         rect = pygame.Rect(120, 205 + index * 56, 740, 44)
         selected = index == shell.focus
-        pygame.draw.rect(screen, (255, 255, 255) if high_contrast and selected else (96, 186, 225)
-                         if selected else (48, 48, 66), rect, width=4 if selected else 0, border_radius=6)
+        pygame.draw.rect(
+            screen,
+            (255, 255, 255)
+            if high_contrast and selected
+            else (96, 186, 225)
+            if selected
+            else (48, 48, 66),
+            rect,
+            width=4 if selected else 0,
+            border_radius=6,
+        )
         color = (10, 10, 10) if high_contrast and selected else (255, 255, 255)
-        screen.blit(font.render(f"{'▶ ' if selected else '  '}{entry}", True, color), (138, rect.y + 11))
+        screen.blit(
+            font.render(f"{'▶ ' if selected else '  '}{entry}", True, color), (138, rect.y + 11)
+        )
 
 
 def _load_title_background(pygame: Any) -> Any | None:
     """Load the approved title key art once and preserve a plain fallback."""
     try:
-        image = pygame.image.load(resource_path("assets/ui/title/title_hero_v1.png").as_posix()).convert()
+        image = pygame.image.load(
+            resource_path("assets/ui/title/title_hero_v1.png").as_posix()
+        ).convert()
         return pygame.transform.smoothscale(image, (1280, 720))
     except (OSError, pygame.error):
         return None
 
 
-def _draw_title(pygame: Any, screen: Any, shell: Shell, entries: list[str],
-                detail: str, high_contrast: bool, background: Any | None) -> None:
+def _draw_title(
+    pygame: Any,
+    screen: Any,
+    shell: Shell,
+    entries: list[str],
+    detail: str,
+    high_contrast: bool,
+    background: Any | None,
+) -> None:
     """Render the cinematic four-fighter front door at the logical resolution."""
     if background is None:
         screen.fill((24, 12, 31))
@@ -97,7 +134,9 @@ def _draw_title(pygame: Any, screen: Any, shell: Shell, entries: list[str],
     screen.blit(hint, ((1280 - hint.get_width()) // 2, 691))
 
 
-def _load_selection_art(pygame: Any, title_background: Any | None) -> tuple[dict[str, Any], dict[str, Any]]:
+def _load_selection_art(
+    pygame: Any, title_background: Any | None
+) -> tuple[dict[str, Any], dict[str, Any]]:
     """Cache fighter key-art crops and arena previews for the selection screen."""
     fighter_crops: dict[str, Any] = {}
     if title_background is not None:
@@ -117,7 +156,9 @@ def _load_selection_art(pygame: Any, title_background: Any | None) -> tuple[dict
     }
     for stage_id, filename in stage_files.items():
         try:
-            image = pygame.image.load(resource_path(f"assets/stages/{filename}").as_posix()).convert()
+            image = pygame.image.load(
+                resource_path(f"assets/stages/{filename}").as_posix()
+            ).convert()
             stage_previews[stage_id] = pygame.transform.smoothscale(image, (376, 212))
         except (OSError, pygame.error):
             continue
@@ -153,17 +194,29 @@ def _draw_select(
     heading = heading_font.render("CHOOSE YOUR CLAY", True, (255, 207, 60))
     screen.blit(heading, heading.get_rect(center=(640, 48)))
 
-    card_specs = ((pygame.Rect(42, 100, 350, 420), p1_id, "PLAYER 1", (235, 63, 103), 0),
-                  (pygame.Rect(888, 100, 350, 420), p2_id, "PLAYER 2", (52, 178, 224), 1))
+    card_specs = (
+        (pygame.Rect(42, 100, 350, 420), p1_id, "PLAYER 1", (235, 63, 103), 0),
+        (pygame.Rect(888, 100, 350, 420), p2_id, "PLAYER 2", (52, 178, 224), 1),
+    )
     for rect, fighter_id, player_label, accent, focus_index in card_specs:
         selected = shell.focus == focus_index
         pygame.draw.rect(screen, (8, 5, 15), rect.move(7, 8), border_radius=18)
         pygame.draw.rect(screen, (25, 20, 37), rect, border_radius=18)
         art = fighter_crops.get(fighter_id)
         if art is not None:
-            screen.blit(pygame.transform.smoothscale(art, (rect.width - 12, 326)), (rect.x + 6, rect.y + 6))
-        pygame.draw.rect(screen, (15, 11, 24, 235), (rect.x + 6, rect.bottom - 88, rect.width - 12, 82))
-        pygame.draw.rect(screen, (255, 231, 112) if selected else accent, rect, 5 if selected else 3, border_radius=18)
+            screen.blit(
+                pygame.transform.smoothscale(art, (rect.width - 12, 326)), (rect.x + 6, rect.y + 6)
+            )
+        pygame.draw.rect(
+            screen, (15, 11, 24, 235), (rect.x + 6, rect.bottom - 88, rect.width - 12, 82)
+        )
+        pygame.draw.rect(
+            screen,
+            (255, 231, 112) if selected else accent,
+            rect,
+            5 if selected else 3,
+            border_radius=18,
+        )
         screen.blit(small_font.render(player_label, True, accent), (rect.x + 18, rect.bottom - 78))
         name = name_font.render(display_name(fighter_id).upper(), True, (255, 255, 255))
         screen.blit(name, (rect.x + 18, rect.bottom - 52))
@@ -179,8 +232,11 @@ def _draw_select(
     else:
         pygame.draw.rect(screen, (34, 29, 45), stage_rect)
     pygame.draw.rect(
-        screen, (255, 231, 112) if shell.focus == 2 else (153, 130, 180),
-        stage_rect, 5 if shell.focus == 2 else 2, border_radius=12,
+        screen,
+        (255, 231, 112) if shell.focus == 2 else (153, 130, 180),
+        stage_rect,
+        5 if shell.focus == 2 else 2,
+        border_radius=12,
     )
     stage_label = name_font.render(stage_id.replace("_", " ").upper(), True, (255, 255, 255))
     label_bg = pygame.Surface((stage_rect.width - 4, 42), pygame.SRCALPHA)
@@ -193,17 +249,24 @@ def _draw_select(
         rect = pygame.Rect(92 + index * 196, roster_y, 180, 48)
         active = fighter_id in (p1_id, p2_id)
         pygame.draw.rect(screen, (87, 46, 104) if active else (28, 23, 42), rect, border_radius=9)
-        pygame.draw.rect(screen, (255, 210, 94) if active else (111, 99, 127), rect, 2, border_radius=9)
+        pygame.draw.rect(
+            screen, (255, 210, 94) if active else (111, 99, 127), rect, 2, border_radius=9
+        )
         label = small_font.render(display_name(fighter_id), True, (255, 255, 255))
         screen.blit(label, label.get_rect(center=rect.center))
 
     fight_rect = pygame.Rect(890, roster_y, 300, 58)
     fight_selected = shell.focus == 3
     pygame.draw.rect(screen, (8, 5, 15), fight_rect.move(0, 5), border_radius=12)
-    pygame.draw.rect(screen, (225, 61, 91) if fight_selected else (42, 33, 55), fight_rect, border_radius=12)
     pygame.draw.rect(
-        screen, (255, 231, 112) if fight_selected else (190, 176, 205),
-        fight_rect, 4 if fight_selected else 2, border_radius=12,
+        screen, (225, 61, 91) if fight_selected else (42, 33, 55), fight_rect, border_radius=12
+    )
+    pygame.draw.rect(
+        screen,
+        (255, 231, 112) if fight_selected else (190, 176, 205),
+        fight_rect,
+        4 if fight_selected else 2,
+        border_radius=12,
     )
     fight_label = name_font.render("BEGIN MATCH", True, (255, 255, 255))
     screen.blit(fight_label, fight_label.get_rect(center=fight_rect.center))
@@ -212,8 +275,32 @@ def _draw_select(
     screen.blit(hint, hint.get_rect(center=(640, 682)))
 
 
-def _present_event(audio: MixerAudioService, effects: ClayEffectPool, reduced: bool,
-                   event: PresentationEvent) -> None:
+def _mouse_focus(pygame: Any, screen_name: str, position: tuple[int, int]) -> int | None:
+    """Map visible menu controls to the same focus/confirm path as a keyboard."""
+    if screen_name == "title":
+        for index in range(4):
+            if pygame.Rect(123 + index * 263, 618, 245, 58).collidepoint(position):
+                return index
+        return None
+    if screen_name == "select":
+        regions = (
+            pygame.Rect(42, 100, 350, 420),
+            pygame.Rect(888, 100, 350, 420),
+            pygame.Rect(450, 304, 380, 218),
+            pygame.Rect(890, 545, 300, 58),
+        )
+        return next(
+            (index for index, rect in enumerate(regions) if rect.collidepoint(position)), None
+        )
+    for index in range(12):
+        if pygame.Rect(120, 205 + index * 56, 740, 44).collidepoint(position):
+            return index
+    return None
+
+
+def _present_event(
+    audio: MixerAudioService, effects: ClayEffectPool, reduced: bool, event: PresentationEvent
+) -> None:
     audio.dispatch(event)
     effects.trigger(event, reduced)
 
@@ -237,8 +324,12 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
     audio = MixerAudioService(
         pygame,
         AudioLevels(
-            settings.audio.master, settings.audio.music, settings.audio.sfx, settings.audio.voice,
-            settings.audio.ui, tuple(settings.audio.muted),
+            settings.audio.master,
+            settings.audio.music,
+            settings.audio.sfx,
+            settings.audio.voice,
+            settings.audio.ui,
+            tuple(settings.audio.muted),
         ),
     )
     dispatcher, effects = PresentationDispatcher(), ClayEffectPool()
@@ -248,6 +339,8 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
     while running:
         elapsed = clock.tick(240)
         disconnected = False
+        mouse_confirm = False
+        mouse_back = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -259,11 +352,27 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
             elif event.type in (pygame.WINDOWFOCUSLOST, pygame.WINDOWMINIMIZED):
                 shell.pause("Focus lost")
                 router.clear()
+            elif event.type == pygame.MOUSEMOTION and shell.screen != "match":
+                hovered = _mouse_focus(pygame, shell.screen, event.pos)
+                if hovered is not None:
+                    shell.focus = hovered
+            elif event.type == pygame.MOUSEBUTTONDOWN and shell.screen != "match":
+                if event.button == 1:
+                    hovered = _mouse_focus(pygame, shell.screen, event.pos)
+                    if hovered is not None:
+                        shell.focus = hovered
+                        mouse_confirm = True
+                elif event.button == 3:
+                    mouse_back = True
             else:
                 translated = _event_token(pygame, event)
                 if translated:
                     router.event(*translated)
-                    if remapping is not None and translated[0] in {"key", "button"} and translated[2]:
+                    if (
+                        remapping is not None
+                        and translated[0] in {"key", "button"}
+                        and translated[2]
+                    ):
                         try:
                             router.set_binding(remapping[0], remapping[1], translated[1])
                             diagnostic, remapping = "Binding saved.", None
@@ -274,24 +383,43 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
             shell.pause("Controller disconnected")
             router.clear()
         edges = router.shell_edges()
+        if mouse_confirm:
+            edges.add(SemanticAction.CONFIRM)
+        if mouse_back:
+            edges.add(SemanticAction.BACK)
         if shell.screen != "match":
             entries = {
                 "title": ["Start versus", "Training", "Settings", "Controls"],
-                "select": [f"P1: {display_name(p1_id)}", f"P2: {display_name(p2_id)}",
-                           f"Stage: {stage_id.replace('_', ' ').title()}", "Begin match"],
-                "settings": [f"High contrast: {'on' if settings.accessibility.high_contrast else 'off'}",
-                             f"Reduced effects: {'on' if settings.accessibility.reduced_effects else 'off'}",
-                             f"Master volume: {settings.audio.master}%",
-                             f"Music volume: {settings.audio.music}%",
-                             f"SFX volume: {settings.audio.sfx}%",
-                             f"Voice volume: {settings.audio.voice}%",
-                             f"UI volume: {settings.audio.ui}%",
-                             "Assign connected controller to P1", "Assign connected controller to P2",
-                             "Remap P1 light"],
-                "controls": ["P1: A/D/W/S + F/G/H/J/T", "P2: arrows + keypad 1/2/3/0/5",
-                             "Controller: D-pad + buttons 0/1/2/3", "Remap via settings.json"],
+                "select": [
+                    f"P1: {display_name(p1_id)}",
+                    f"P2: {display_name(p2_id)}",
+                    f"Stage: {stage_id.replace('_', ' ').title()}",
+                    "Begin match",
+                ],
+                "settings": [
+                    f"High contrast: {'on' if settings.accessibility.high_contrast else 'off'}",
+                    f"Reduced effects: {'on' if settings.accessibility.reduced_effects else 'off'}",
+                    f"Master volume: {settings.audio.master}%",
+                    f"Music volume: {settings.audio.music}%",
+                    f"SFX volume: {settings.audio.sfx}%",
+                    f"Voice volume: {settings.audio.voice}%",
+                    f"UI volume: {settings.audio.ui}%",
+                    "Assign connected controller to P1",
+                    "Assign connected controller to P2",
+                    "Remap P1 light",
+                ],
+                "controls": [
+                    "P1: A/D/W/S + J/K/L/I/U",
+                    "P2: arrows + keypad 1/2/3/0/5",
+                    "Controller: D-pad + buttons 0/1/2/3",
+                    "Remap via settings.json",
+                ],
                 "training": ["Start training", "Move list", "Back"],
-                "moves": ["Light / Medium / Heavy / Special", "Throw: map a controller button", "Back"],
+                "moves": [
+                    "Light / Medium / Heavy / Special",
+                    "Throw: map a controller button",
+                    "Back",
+                ],
             }[shell.screen]
             for action in edges:
                 shell.navigate(action, len(entries))
@@ -299,9 +427,15 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                 shell.screen, shell.focus = ("title", 0)
             if SemanticAction.CONFIRM in edges:
                 if shell.screen == "title":
-                    shell.screen, shell.focus = (("select", 0) if shell.focus == 0 else
-                                                 ("training", 0) if shell.focus == 1 else
-                                                 ("settings", 0) if shell.focus == 2 else ("controls", 0))
+                    shell.screen, shell.focus = (
+                        ("select", 0)
+                        if shell.focus == 0
+                        else ("training", 0)
+                        if shell.focus == 1
+                        else ("settings", 0)
+                        if shell.focus == 2
+                        else ("controls", 0)
+                    )
                 elif shell.screen == "select":
                     if shell.focus == 0:
                         p1_id = fighters[(fighters.index(p1_id) + 1) % len(fighters)]
@@ -319,7 +453,10 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                 elif shell.screen == "training":
                     if shell.focus == 0:
                         training, shell.screen = True, "match"
-                        game, sim_clock = SessionKernel(seed, p1_id, p2_id, training=1), FixedStepClock()
+                        game, sim_clock = (
+                            SessionKernel(seed, p1_id, p2_id, training=1),
+                            FixedStepClock(),
+                        )
                         match_assets = load_match_assets(pygame, (p1_id, p2_id), stage_id)
                         audio.start_match_music(seed)
                     elif shell.focus == 1:
@@ -329,16 +466,24 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                 elif shell.screen == "settings":
                     if shell.focus < 2:
                         attr = "high_contrast" if shell.focus == 0 else "reduced_effects"
-                        setattr(settings.accessibility, attr, not getattr(settings.accessibility, attr))
+                        setattr(
+                            settings.accessibility, attr, not getattr(settings.accessibility, attr)
+                        )
                         save(settings)
                     elif shell.focus in {2, 3, 4, 5, 6}:
                         attr = ("master", "music", "sfx", "voice", "ui")[shell.focus - 2]
                         value = (getattr(settings.audio, attr) + 10) % 110
                         setattr(settings.audio, attr, value)
-                        audio.apply_levels(AudioLevels(
-                            settings.audio.master, settings.audio.music, settings.audio.sfx,
-                            settings.audio.voice, settings.audio.ui, tuple(settings.audio.muted),
-                        ))
+                        audio.apply_levels(
+                            AudioLevels(
+                                settings.audio.master,
+                                settings.audio.music,
+                                settings.audio.sfx,
+                                settings.audio.voice,
+                                settings.audio.ui,
+                                tuple(settings.audio.muted),
+                            )
+                        )
                         save(settings)
                     else:
                         if shell.focus == 9:
@@ -348,22 +493,44 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                             device = next(iter(router.lifecycle.devices), None)
                             if device is not None:
                                 router.lifecycle.assign(device, shell.focus - 7)
-            detail = diagnostic or "Arrow/D-pad navigate • Enter/button 0 confirm • Esc/button 1 back"
+            detail = (
+                diagnostic or "Arrow/D-pad navigate • Enter/button 0 confirm • Esc/button 1 back"
+            )
             if shell.screen == "title":
                 _draw_title(
-                    pygame, screen, shell, entries, detail,
-                    settings.accessibility.high_contrast, title_background,
+                    pygame,
+                    screen,
+                    shell,
+                    entries,
+                    detail,
+                    settings.accessibility.high_contrast,
+                    title_background,
                 )
             elif shell.screen == "select":
                 _draw_select(
-                    pygame, screen, shell, fighters, p1_id, p2_id, stage_id, detail,
-                    settings.accessibility.high_contrast, title_background,
-                    fighter_crops, stage_previews,
+                    pygame,
+                    screen,
+                    shell,
+                    fighters,
+                    p1_id,
+                    p2_id,
+                    stage_id,
+                    detail,
+                    settings.accessibility.high_contrast,
+                    title_background,
+                    fighter_crops,
+                    stage_previews,
                 )
             else:
                 _draw_menu(
-                    pygame, screen, font, shell, shell.screen.upper(), entries,
-                    detail, settings.accessibility.high_contrast,
+                    pygame,
+                    screen,
+                    font,
+                    shell,
+                    shell.screen.upper(),
+                    entries,
+                    detail,
+                    settings.accessibility.high_contrast,
                 )
         elif game is not None and match_assets is not None:
             if SemanticAction.PAUSE in edges or SemanticAction.BACK in edges:
@@ -385,21 +552,42 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                     last_actions = (router.actions_for(0), router.actions_for(1))
                     game.tick(frames)
                     result = game.match.result
-                    if result is not None and result.finisher_variant and match_assets.finisher is None:
+                    if (
+                        result is not None
+                        and result.finisher_variant
+                        and match_assets.finisher is None
+                    ):
                         match_assets.finisher = FinisherPlayback(result.finisher_variant)
-                    if game.match.phase in {MatchPhase.KO_HOLD, MatchPhase.FINISHER_WINDOW} and match_assets.finisher is not None:
+                    if (
+                        game.match.phase in {MatchPhase.KO_HOLD, MatchPhase.FINISHER_WINDOW}
+                        and match_assets.finisher is not None
+                    ):
                         match_assets.finisher.preload_one(pygame)
                     dispatcher.dispatch(
                         game.presentation_events(),
-                        lambda event: _present_event(audio, effects, settings.accessibility.reduced_effects, event),
+                        lambda event: _present_event(
+                            audio, effects, settings.accessibility.reduced_effects, event
+                        ),
                     )
                     effects.advance()
                     if on_tick:
                         on_tick(game.tick_index)
                     if game.match.phase is MatchPhase.RESULTS:
                         break
-            draw_match(pygame, screen, font, game, last_actions, training, shell.paused,
-                       shell.pause_reason, settings.accessibility.reduced_effects, match_assets, stage_id, effects)
+            draw_match(
+                pygame,
+                screen,
+                font,
+                game,
+                last_actions,
+                training,
+                shell.paused,
+                shell.pause_reason,
+                settings.accessibility.reduced_effects,
+                match_assets,
+                stage_id,
+                effects,
+            )
         pygame.display.flip()
     settings.bindings = router.bindings
     settings.onboarding_complete = True

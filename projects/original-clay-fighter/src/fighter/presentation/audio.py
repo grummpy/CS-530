@@ -10,8 +10,11 @@ from fighter.sim.events import PresentationEvent
 
 AudioCategory = Literal["master", "music", "sfx", "voice", "ui"]
 MUSIC_TRACKS = (
-    "battle_of_the_kitchen.wav", "mark_zuckerberg_in_battle.wav", "neon_warrior.wav",
-    "make_america_great_again.wav", "hoosiers_stand_together.wav",
+    "battle_of_the_kitchen.wav",
+    "mark_zuckerberg_in_battle.wav",
+    "neon_warrior.wav",
+    "make_america_great_again.wav",
+    "hoosiers_stand_together.wav",
 )
 CUE_MANIFEST_VERSION = 1
 CUE_MANIFEST: dict[str, tuple[str, AudioCategory, int]] = {
@@ -38,8 +41,11 @@ class AudioLevels:
         if category in self.muted or "master" in self.muted:
             return 0.0
         category_level = {
-            "master": self.master, "music": self.music, "sfx": self.sfx,
-            "voice": self.voice, "ui": self.ui,
+            "master": self.master,
+            "music": self.music,
+            "sfx": self.sfx,
+            "voice": self.voice,
+            "ui": self.ui,
         }[category]
         return self.master * category_level / 10_000
 

@@ -32,40 +32,71 @@ class SemanticAction(StrEnum):
 
 COMBAT_ACTIONS = frozenset(
     {
-        SemanticAction.LEFT, SemanticAction.RIGHT, SemanticAction.UP, SemanticAction.DOWN,
-        SemanticAction.LIGHT, SemanticAction.MEDIUM, SemanticAction.HEAVY,
-        SemanticAction.SPECIAL, SemanticAction.THROW,
+        SemanticAction.LEFT,
+        SemanticAction.RIGHT,
+        SemanticAction.UP,
+        SemanticAction.DOWN,
+        SemanticAction.LIGHT,
+        SemanticAction.MEDIUM,
+        SemanticAction.HEAVY,
+        SemanticAction.SPECIAL,
+        SemanticAction.THROW,
     }
 )
 SHELL_ACTIONS = frozenset(set(SemanticAction) - set(COMBAT_ACTIONS))
 ACTION_BITS = {
-    SemanticAction.LEFT: Action.LEFT, SemanticAction.RIGHT: Action.RIGHT,
-    SemanticAction.UP: Action.UP, SemanticAction.DOWN: Action.DOWN,
-    SemanticAction.LIGHT: Action.LIGHT, SemanticAction.MEDIUM: Action.MEDIUM,
-    SemanticAction.HEAVY: Action.HEAVY, SemanticAction.SPECIAL: Action.SPECIAL,
+    SemanticAction.LEFT: Action.LEFT,
+    SemanticAction.RIGHT: Action.RIGHT,
+    SemanticAction.UP: Action.UP,
+    SemanticAction.DOWN: Action.DOWN,
+    SemanticAction.LIGHT: Action.LIGHT,
+    SemanticAction.MEDIUM: Action.MEDIUM,
+    SemanticAction.HEAVY: Action.HEAVY,
+    SemanticAction.SPECIAL: Action.SPECIAL,
     SemanticAction.THROW: Action.THROW,
 }
 CONTROLLER_DEFAULTS = {
-    "hat:left": SemanticAction.LEFT, "hat:right": SemanticAction.RIGHT,
-    "hat:up": SemanticAction.UP, "hat:down": SemanticAction.DOWN,
-    "button:0": SemanticAction.LIGHT, "button:1": SemanticAction.MEDIUM,
-    "button:2": SemanticAction.HEAVY, "button:3": SemanticAction.SPECIAL,
-    "button:4": SemanticAction.THROW, "button:7": SemanticAction.PAUSE,
-    "button:9": SemanticAction.CONFIRM, "button:8": SemanticAction.BACK,
+    "hat:left": SemanticAction.LEFT,
+    "hat:right": SemanticAction.RIGHT,
+    "hat:up": SemanticAction.UP,
+    "hat:down": SemanticAction.DOWN,
+    "button:0": SemanticAction.LIGHT,
+    "button:1": SemanticAction.MEDIUM,
+    "button:2": SemanticAction.HEAVY,
+    "button:3": SemanticAction.SPECIAL,
+    "button:4": SemanticAction.THROW,
+    "button:7": SemanticAction.PAUSE,
+    "button:9": SemanticAction.CONFIRM,
+    "button:8": SemanticAction.BACK,
 }
 
 
 def default_bindings() -> list[dict[str, str]]:
     """Return serializable bindings; key values deliberately use stable pygame key codes."""
-    p1 = ("97", "100", "119", "115", "102", "103", "104", "106", "116")
-    p2 = ("1073741904", "1073741903", "1073741906", "1073741905", "1073741913",
-          "1073741914", "1073741915", "1073741922", "1073741917")
+    # Familiar keyboard layout: WASD movement with the right hand on J/K/L/I/U.
+    p1 = ("97", "100", "119", "115", "106", "107", "108", "105", "117")
+    p2 = (
+        "1073741904",
+        "1073741903",
+        "1073741906",
+        "1073741905",
+        "1073741913",
+        "1073741914",
+        "1073741915",
+        "1073741922",
+        "1073741917",
+    )
     names = ("left", "right", "up", "down", "light", "medium", "heavy", "special", "throw")
     common = {
-        "confirm": "key:13", "back": "key:27", "pause": "key:112",
-        "menu_up": "key:1073741906", "menu_down": "key:1073741905",
-        "menu_left": "key:1073741904", "menu_right": "key:1073741903",
-        "open_move_list": "key:9", "reset": "key:114",
+        "confirm": "key:13",
+        "back": "key:27",
+        "pause": "key:112",
+        "menu_up": "key:1073741906",
+        "menu_down": "key:1073741905",
+        "menu_left": "key:1073741904",
+        "menu_right": "key:1073741903",
+        "open_move_list": "key:9",
+        "reset": "key:114",
     }
     return [
         {**{name: f"key:{code}" for name, code in zip(names, p1, strict=True)}, **common},
@@ -89,7 +120,9 @@ class DeviceLifecycle:
 
     def connect(self, instance_id: int, label: str) -> Device:
         device = Device(instance_id, label)
-        vacant = next((p for p in sorted(self.awaiting_reconnect) if p not in self.assignments), None)
+        vacant = next(
+            (p for p in sorted(self.awaiting_reconnect) if p not in self.assignments), None
+        )
         if vacant is not None:
             device.player = vacant
             self.awaiting_reconnect.remove(vacant)
@@ -98,8 +131,11 @@ class DeviceLifecycle:
 
     @property
     def assignments(self) -> dict[int, int]:
-        return {device.player: device.instance_id for device in self.devices.values()
-                if device.player is not None}
+        return {
+            device.player: device.instance_id
+            for device in self.devices.values()
+            if device.player is not None
+        }
 
     def assign(self, instance_id: int, player: int) -> None:
         if player not in (0, 1) or instance_id not in self.devices:
@@ -133,7 +169,7 @@ class InputRouter:
             raise ValueError("invalid binding")
         context = COMBAT_ACTIONS if action in COMBAT_ACTIONS else SHELL_ACTIONS
         for name, existing in self.bindings[player].items():
-            if (name != action.value and SemanticAction(name) in context and existing == token):
+            if name != action.value and SemanticAction(name) in context and existing == token:
                 raise ValueError(f"binding conflicts with {name}")
         self.bindings[player][action.value] = token
         self.clear()
@@ -158,11 +194,14 @@ class InputRouter:
             sources.add(f"controller:{controller}")
         physical = set().union(*(self.held.get(source, set()) for source in sources))
         actions = {
-            SemanticAction(name) for name, token in self.bindings[player].items() if token in physical
+            SemanticAction(name)
+            for name, token in self.bindings[player].items()
+            if token in physical
         }
         if controller is not None:
             actions.update(
-                action for token, action in CONTROLLER_DEFAULTS.items()
+                action
+                for token, action in CONTROLLER_DEFAULTS.items()
                 if token in self.held.get(f"controller:{controller}", set())
             )
         return actions
@@ -186,4 +225,9 @@ class InputRouter:
 
 def _valid_token(token: str) -> bool:
     prefix, separator, value = token.partition(":")
-    return prefix in {"key", "button", "hat"} and bool(separator) and value.isascii() and len(value) <= 24
+    return (
+        prefix in {"key", "button", "hat"}
+        and bool(separator)
+        and value.isascii()
+        and len(value) <= 24
+    )

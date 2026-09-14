@@ -10,7 +10,7 @@ from typing import Any
 
 from fighter.platform.input import COMBAT_ACTIONS, SemanticAction, default_bindings
 
-SETTINGS_VERSION = 2
+SETTINGS_VERSION = 3
 
 
 @dataclass
@@ -39,16 +39,24 @@ class Settings:
 
 
 def user_settings_path() -> Path:
-    root = Path(os.environ.get("APPDATA") or os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config")
+    root = Path(
+        os.environ.get("APPDATA") or os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config"
+    )
     return root / "papier-parade" / "settings.json"
 
 
 def validate(raw: object) -> Settings:
-    if not isinstance(raw, dict) or set(raw) - {"version", "bindings", "accessibility", "audio", "onboarding_complete"}:
+    if not isinstance(raw, dict) or set(raw) - {
+        "version",
+        "bindings",
+        "accessibility",
+        "audio",
+        "onboarding_complete",
+    }:
         raise ValueError("settings schema is invalid")
     version = raw.get("version", SETTINGS_VERSION)
-    if version in (0, 1):
-        raw = {**raw, "version": SETTINGS_VERSION}
+    if version in (0, 1, 2):
+        raw = {**raw, "version": SETTINGS_VERSION, "bindings": default_bindings()}
     elif version != SETTINGS_VERSION:
         raise ValueError("unsupported settings version")
     bindings = raw.get("bindings", default_bindings())
@@ -61,10 +69,14 @@ def validate(raw: object) -> Settings:
             raise ValueError("settings binding actions are invalid")
         values = list(player.values())
         combat_values = [player[action.value] for action in COMBAT_ACTIONS]
-        shell_values = [player[action.value] for action in set(SemanticAction) - set(COMBAT_ACTIONS)]
-        if (any(not isinstance(value, str) or not _binding(value) for value in values)
-                or len(combat_values) != len(set(combat_values))
-                or len(shell_values) != len(set(shell_values))):
+        shell_values = [
+            player[action.value] for action in set(SemanticAction) - set(COMBAT_ACTIONS)
+        ]
+        if (
+            any(not isinstance(value, str) or not _binding(value) for value in values)
+            or len(combat_values) != len(set(combat_values))
+            or len(shell_values) != len(set(shell_values))
+        ):
             raise ValueError("settings bindings conflict or are invalid")
         checked.append(dict(player))
     access = raw.get("accessibility", {})
@@ -81,13 +93,22 @@ def validate(raw: object) -> Settings:
         raise ValueError("audio settings are invalid")
     levels = {key: audio_raw.get(key, Audio().__getattribute__(key)) for key in categories}
     muted = audio_raw.get("muted", [])
-    if (not all(isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= 100
-                for value in levels.values())
-            or not isinstance(muted, list) or any(item not in categories for item in muted)
-            or len(muted) != len(set(muted))):
+    if (
+        not all(
+            isinstance(value, int) and not isinstance(value, bool) and 0 <= value <= 100
+            for value in levels.values()
+        )
+        or not isinstance(muted, list)
+        or any(item not in categories for item in muted)
+        or len(muted) != len(set(muted))
+    ):
         raise ValueError("audio levels are invalid")
-    return Settings(bindings=checked, accessibility=Accessibility(high, reduced),
-                    audio=Audio(**levels, muted=list(muted)), onboarding_complete=complete)
+    return Settings(
+        bindings=checked,
+        accessibility=Accessibility(high, reduced),
+        audio=Audio(**levels, muted=list(muted)),
+        onboarding_complete=complete,
+    )
 
 
 def load(path: Path | None = None) -> tuple[Settings, str | None]:
@@ -106,7 +127,9 @@ def save(settings: Settings, path: Path | None = None) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.new")
     try:
-        temporary.write_text(json.dumps(_as_dict(validated), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        temporary.write_text(
+            json.dumps(_as_dict(validated), indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
         temporary.replace(path)
     finally:
         if temporary.exists():
@@ -115,15 +138,29 @@ def save(settings: Settings, path: Path | None = None) -> None:
 
 def _as_dict(settings: Settings) -> dict[str, Any]:
     return {
-        "version": settings.version, "bindings": settings.bindings,
-        "accessibility": {"high_contrast": settings.accessibility.high_contrast,
-                          "reduced_effects": settings.accessibility.reduced_effects},
-        "audio": {"master": settings.audio.master, "music": settings.audio.music, "sfx": settings.audio.sfx,
-                  "voice": settings.audio.voice, "ui": settings.audio.ui, "muted": settings.audio.muted},
+        "version": settings.version,
+        "bindings": settings.bindings,
+        "accessibility": {
+            "high_contrast": settings.accessibility.high_contrast,
+            "reduced_effects": settings.accessibility.reduced_effects,
+        },
+        "audio": {
+            "master": settings.audio.master,
+            "music": settings.audio.music,
+            "sfx": settings.audio.sfx,
+            "voice": settings.audio.voice,
+            "ui": settings.audio.ui,
+            "muted": settings.audio.muted,
+        },
         "onboarding_complete": settings.onboarding_complete,
     }
 
 
 def _binding(token: str) -> bool:
     prefix, separator, value = token.partition(":")
-    return prefix in {"key", "button", "hat"} and bool(separator) and value.isascii() and len(value) <= 24
+    return (
+        prefix in {"key", "button", "hat"}
+        and bool(separator)
+        and value.isascii()
+        and len(value) <= 24
+    )

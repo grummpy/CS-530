@@ -12,7 +12,9 @@ from fighter.sim.events import PresentationEvent
 class PresentationDispatcher:
     _seen: set[int] = field(default_factory=set)
 
-    def dispatch(self, events: Iterable[PresentationEvent], consumer: Callable[[PresentationEvent], None]) -> int:
+    def dispatch(
+        self, events: Iterable[PresentationEvent], consumer: Callable[[PresentationEvent], None]
+    ) -> int:
         delivered = 0
         for event in events:
             if event.event_id in self._seen:

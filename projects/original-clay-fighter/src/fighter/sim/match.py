@@ -34,15 +34,24 @@ KO_HOLD_TICKS = 30
 FINISHER_WINDOW_TICKS = 180
 
 
-def new_match(seed: int = 1, p1_id: str = "graybox_rival", p2_id: str = "graybox_rival",
-              training: int = 0) -> MatchState:
+def new_match(
+    seed: int = 1, p1_id: str = "graybox_rival", p2_id: str = "graybox_rival", training: int = 0
+) -> MatchState:
     return initial_match(seed, p1_id, p2_id, training, load_fighter(p1_id), load_fighter(p2_id))
 
 
 def reset_round(match: MatchState) -> None:
     fresh = new_match(match.seed, match.p1.fighter_id, match.p2.fighter_id, match.training)
-    match.p1, match.p2, match.tick, match.phase, match.events, match.round_ticks, match.result, match.phase_ticks = (
-        fresh.p1, fresh.p2, fresh.tick, fresh.phase, [], fresh.round_ticks, None, 0)
+    (
+        match.p1,
+        match.p2,
+        match.tick,
+        match.phase,
+        match.events,
+        match.round_ticks,
+        match.result,
+        match.phase_ticks,
+    ) = (fresh.p1, fresh.p2, fresh.tick, fresh.phase, [], fresh.round_ticks, None, 0)
     match.presentation_events = []
 
 
@@ -53,9 +62,17 @@ def _push_interval(fighter: FighterState) -> tuple[int, int]:
 
 def _move_and_jump(fighter: FighterState, held: int, pressed: int) -> None:
     fighter.blocking = False
-    locked = {FighterMode.ATTACK, FighterMode.THROW, FighterMode.JUMP_STARTUP, FighterMode.HITSTUN,
-              FighterMode.BLOCKSTUN, FighterMode.KNOCKDOWN_SOFT, FighterMode.KNOCKDOWN_HARD,
-              FighterMode.WAKEUP, FighterMode.KO}
+    locked = {
+        FighterMode.ATTACK,
+        FighterMode.THROW,
+        FighterMode.JUMP_STARTUP,
+        FighterMode.HITSTUN,
+        FighterMode.BLOCKSTUN,
+        FighterMode.KNOCKDOWN_SOFT,
+        FighterMode.KNOCKDOWN_HARD,
+        FighterMode.WAKEUP,
+        FighterMode.KO,
+    }
     if fighter.mode in locked:
         return
     if fighter.mode in {FighterMode.ASCENT, FighterMode.DESCENT}:
@@ -87,7 +104,9 @@ def _clamp_and_separate(p1: FighterState, p2: FighterState) -> None:
     overlap = _push_interval(left_fighter)[1] - _push_interval(right_fighter)[0]
     if overlap > 0:
         left_limit = left_fighter.x - (LEFT_WALL - left_fighter.definition.push_box.x)
-        right_limit = (RIGHT_WALL - (right_fighter.definition.push_box.x + right_fighter.definition.push_box.w)) - right_fighter.x
+        right_limit = (
+            RIGHT_WALL - (right_fighter.definition.push_box.x + right_fighter.definition.push_box.w)
+        ) - right_fighter.x
         left_shift = min((overlap + 1) // 2, max(0, left_limit))
         right_shift = min(overlap - left_shift, max(0, right_limit))
         left_shift += overlap - left_shift - right_shift
@@ -110,35 +129,59 @@ def _can_cancel(fighter: FighterState, definition: FighterDefinition, pressed: i
         return None
     source = definition.moves[fighter.attack_move]
     frame = source.total - fighter.attack_ticks + 1
-    if not source.cancel_start <= frame <= source.cancel_end or fighter.cancel_depth >= RULES.max_cancel_depth:
+    if (
+        not source.cancel_start <= frame <= source.cancel_end
+        or fighter.cancel_depth >= RULES.max_cancel_depth
+    ):
         return None
     allowed = source.cancel_on_hit if fighter.attack_confirm == "hit" else source.cancel_on_block
     if not allowed:
         return None
-    for action, name in ((Action.LIGHT, "light"), (Action.MEDIUM, "medium"), (Action.HEAVY, "heavy"),
-                         (Action.SPECIAL, definition.profile.special_id)):
+    for action, name in (
+        (Action.LIGHT, "light"),
+        (Action.MEDIUM, "medium"),
+        (Action.HEAVY, "heavy"),
+        (Action.SPECIAL, definition.profile.special_id),
+    ):
         if pressed & action and name in source.cancels and name != source.move_id:
             return name
     return None
 
 
-def _start_attack(fighter: FighterState, definition: FighterDefinition, pressed: int,
-                  events: list[str]) -> None:
+def _start_attack(
+    fighter: FighterState, definition: FighterDefinition, pressed: int, events: list[str]
+) -> None:
     cancel = _can_cancel(fighter, definition, pressed)
-    if fighter.mode in {FighterMode.JUMP_STARTUP, FighterMode.ASCENT, FighterMode.DESCENT,
-                        FighterMode.LANDING, FighterMode.HITSTUN, FighterMode.BLOCKSTUN,
-                        FighterMode.KNOCKDOWN_SOFT, FighterMode.KNOCKDOWN_HARD, FighterMode.WAKEUP,
-                        FighterMode.KO, FighterMode.THROW}:
+    if fighter.mode in {
+        FighterMode.JUMP_STARTUP,
+        FighterMode.ASCENT,
+        FighterMode.DESCENT,
+        FighterMode.LANDING,
+        FighterMode.HITSTUN,
+        FighterMode.BLOCKSTUN,
+        FighterMode.KNOCKDOWN_SOFT,
+        FighterMode.KNOCKDOWN_HARD,
+        FighterMode.WAKEUP,
+        FighterMode.KO,
+        FighterMode.THROW,
+    }:
         return
     if pressed & Action.THROW and fighter.mode not in {FighterMode.ATTACK, FighterMode.THROW}:
         fighter.mode, fighter.attack_move = FighterMode.THROW, "__throw__"
         fighter.attack_ticks, fighter.hit_this_attack, fighter.attack_confirm = (
-            RULES.throw_startup + RULES.throw_active + RULES.throw_recovery, False, "")
+            RULES.throw_startup + RULES.throw_active + RULES.throw_recovery,
+            False,
+            "",
+        )
         return
     if fighter.mode is FighterMode.ATTACK and cancel is None:
         return
-    for action, move_name in ((Action.LIGHT, "light"), (Action.MEDIUM, "medium"),
-                              (Action.HEAVY, "heavy"), (Action.SPECIAL, definition.profile.special_id)):
+    for action, move_name in (
+        (Action.LIGHT, "light"),
+        (Action.MEDIUM, "medium"),
+        (Action.HEAVY, "heavy"),
+        (Action.SPECIAL, definition.profile.special_id),
+    ):
         if not (pressed & action) or move_name is None:
             continue
         move = definition.moves.get(move_name)
@@ -149,8 +192,16 @@ def _start_attack(fighter: FighterState, definition: FighterDefinition, pressed:
         if action is Action.SPECIAL:
             fighter.special_charge -= move.meter_cost
         fighter.cancel_depth = fighter.cancel_depth + 1 if cancel else 0
-        fighter.mode, fighter.attack_kind, fighter.attack_move = FighterMode.ATTACK, _attack_kind(move_name), move_name
-        fighter.attack_ticks, fighter.hit_this_attack, fighter.attack_confirm = move.total, False, ""
+        fighter.mode, fighter.attack_kind, fighter.attack_move = (
+            FighterMode.ATTACK,
+            _attack_kind(move_name),
+            move_name,
+        )
+        fighter.attack_ticks, fighter.hit_this_attack, fighter.attack_confirm = (
+            move.total,
+            False,
+            "",
+        )
         return
 
 
@@ -175,32 +226,59 @@ def _damage(defender: FighterState, amount: int) -> None:
 
 
 def _present(
-    match: MatchState, kind: PresentationKind, actor: int | None, target: int | None,
-    fighter: FighterState, move: str | None = None, strength: int = 0,
+    match: MatchState,
+    kind: PresentationKind,
+    actor: int | None,
+    target: int | None,
+    fighter: FighterState,
+    move: str | None = None,
+    strength: int = 0,
     result: ResultReason | None = None,
 ) -> None:
     """Append an ID-addressable event; this never participates in simulation state."""
-    match.presentation_events.append(PresentationEvent(
-        PRESENTATION_EVENT_VERSION, match.next_presentation_event_id, match.tick, kind, actor, target,
-        (fighter.x, fighter.y), PresentationPayload(move, strength, result),
-    ))
+    match.presentation_events.append(
+        PresentationEvent(
+            PRESENTATION_EVENT_VERSION,
+            match.next_presentation_event_id,
+            match.tick,
+            kind,
+            actor,
+            target,
+            (fighter.x, fighter.y),
+            PresentationPayload(move, strength, result),
+        )
+    )
     match.next_presentation_event_id += 1
 
 
-def _resolve_strike(attacker: FighterState, defender: FighterState, definition: FighterDefinition,
-                    defender_definition: FighterDefinition, defender_input: InputFrame,
-                    events: list[str], match: MatchState, actor: int, target: int) -> None:
+def _resolve_strike(
+    attacker: FighterState,
+    defender: FighterState,
+    definition: FighterDefinition,
+    defender_definition: FighterDefinition,
+    defender_input: InputFrame,
+    events: list[str],
+    match: MatchState,
+    actor: int,
+    target: int,
+) -> None:
     if attacker.mode is not FighterMode.ATTACK or attacker.hit_this_attack:
         return
     move = definition.moves[attacker.attack_move]
     hitbox = _active_hitbox(attacker, move)
-    if hitbox is None or not hitbox.intersects(defender_definition.hurt_box.world(defender.x, defender.y, defender.facing)):
+    if hitbox is None or not hitbox.intersects(
+        defender_definition.hurt_box.world(defender.x, defender.y, defender.facing)
+    ):
         return
     guarded = _guarding(defender, defender_input.held, move.hit_level)
     damage = max(1, move.damage * RULES.combo_damage_percent // 100)
     if guarded:
         _damage(defender, max(1, damage // 3))
-        defender.mode, defender.stun_ticks, defender.blocking = FighterMode.BLOCKSTUN, move.blockstun, True
+        defender.mode, defender.stun_ticks, defender.blocking = (
+            FighterMode.BLOCKSTUN,
+            move.blockstun,
+            True,
+        )
         attacker.attack_confirm, events[:] = "block", [*events, "block"]
         _present(match, "block", actor, target, defender, move.move_id, damage)
     else:
@@ -216,20 +294,40 @@ def _resolve_strike(attacker: FighterState, defender: FighterState, definition: 
 
 
 def _throw_active(fighter: FighterState) -> bool:
-    frame = RULES.throw_startup + RULES.throw_active + RULES.throw_recovery - fighter.attack_ticks + 1
+    frame = (
+        RULES.throw_startup + RULES.throw_active + RULES.throw_recovery - fighter.attack_ticks + 1
+    )
     return RULES.throw_startup < frame <= RULES.throw_startup + RULES.throw_active
 
 
-def _resolve_throw(attacker: FighterState, defender: FighterState, defender_input: InputFrame,
-                   events: list[str], match: MatchState, actor: int, target: int) -> None:
-    if attacker.mode is not FighterMode.THROW or attacker.hit_this_attack or not _throw_active(attacker):
+def _resolve_throw(
+    attacker: FighterState,
+    defender: FighterState,
+    defender_input: InputFrame,
+    events: list[str],
+    match: MatchState,
+    actor: int,
+    target: int,
+) -> None:
+    if (
+        attacker.mode is not FighterMode.THROW
+        or attacker.hit_this_attack
+        or not _throw_active(attacker)
+    ):
         return
-    if defender.airborne or defender.mode in {FighterMode.KNOCKDOWN_SOFT, FighterMode.KNOCKDOWN_HARD,
-                                               FighterMode.WAKEUP, FighterMode.KO}:
+    if defender.airborne or defender.mode in {
+        FighterMode.KNOCKDOWN_SOFT,
+        FighterMode.KNOCKDOWN_HARD,
+        FighterMode.WAKEUP,
+        FighterMode.KO,
+    }:
         events.append("throw_immune")
     elif abs(attacker.x - defender.x) > RULES.throw_range:
         events.append("throw_whiff")
-    elif defender_input.pressed & Action.THROW or defender.throw_tech_until >= attacker.throw_tech_until:
+    elif (
+        defender_input.pressed & Action.THROW
+        or defender.throw_tech_until >= attacker.throw_tech_until
+    ):
         attacker.attack_ticks = defender.attack_ticks = 0
         attacker.mode = defender.mode = FighterMode.NEUTRAL
         events.append("throw_tech")
@@ -237,13 +335,18 @@ def _resolve_throw(attacker: FighterState, defender: FighterState, defender_inpu
     else:
         _damage(defender, RULES.throw_damage)
         defender.mode, defender.state_ticks, defender.combo_count = (
-            FighterMode.KNOCKDOWN_SOFT, RULES.throw_knockdown_ticks, 0)
+            FighterMode.KNOCKDOWN_SOFT,
+            RULES.throw_knockdown_ticks,
+            0,
+        )
         events.append("throw")
         _present(match, "throw", actor, target, defender, "__throw__", RULES.throw_damage)
     attacker.hit_this_attack = True
 
 
-def _advance_states(fighter: FighterState, events: list[str], match: MatchState, player: int) -> None:
+def _advance_states(
+    fighter: FighterState, events: list[str], match: MatchState, player: int
+) -> None:
     if fighter.mode is FighterMode.JUMP_STARTUP:
         fighter.state_ticks -= 1
         if fighter.state_ticks == 0:
@@ -253,10 +356,20 @@ def _advance_states(fighter: FighterState, events: list[str], match: MatchState,
         fighter.vy = min(MAX_FALL, fighter.vy + GRAVITY)
         fighter.mode = FighterMode.ASCENT if fighter.vy < 0 else FighterMode.DESCENT
         if fighter.y >= GROUND_Y:
-            fighter.y, fighter.vy, fighter.mode, fighter.state_ticks = GROUND_Y, 0, FighterMode.LANDING, RULES.landing_ticks
+            fighter.y, fighter.vy, fighter.mode, fighter.state_ticks = (
+                GROUND_Y,
+                0,
+                FighterMode.LANDING,
+                RULES.landing_ticks,
+            )
             events.append("land")
             _present(match, "land", player, None, fighter)
-    elif fighter.mode in {FighterMode.LANDING, FighterMode.KNOCKDOWN_SOFT, FighterMode.KNOCKDOWN_HARD, FighterMode.WAKEUP}:
+    elif fighter.mode in {
+        FighterMode.LANDING,
+        FighterMode.KNOCKDOWN_SOFT,
+        FighterMode.KNOCKDOWN_HARD,
+        FighterMode.WAKEUP,
+    }:
         fighter.state_ticks -= 1
         if fighter.state_ticks == 0:
             if fighter.mode in {FighterMode.KNOCKDOWN_SOFT, FighterMode.KNOCKDOWN_HARD}:
@@ -293,13 +406,24 @@ def _classify_terminal(match: MatchState) -> None:
         victor, defeated = (p1, p2) if winner == 1 else (p2, p1)
         variant = f"{victor.fighter_id}_vs_{defeated.fighter_id}"
     match.result = ResultPayload(reason, winner, match.tick, p1.health, p2.health, variant)
-    match.phase = MatchPhase.KO_HOLD if reason in {ResultReason.KO, ResultReason.DOUBLE_KO} else MatchPhase.RESULTS
+    match.phase = (
+        MatchPhase.KO_HOLD
+        if reason in {ResultReason.KO, ResultReason.DOUBLE_KO}
+        else MatchPhase.RESULTS
+    )
     match.phase_ticks = KO_HOLD_TICKS if match.phase is MatchPhase.KO_HOLD else 0
-    p1.mode, p2.mode = FighterMode.KO if p1.health == 0 else p1.mode, FighterMode.KO if p2.health == 0 else p2.mode
+    p1.mode, p2.mode = (
+        FighterMode.KO if p1.health == 0 else p1.mode,
+        FighterMode.KO if p2.health == 0 else p2.mode,
+    )
     match.events.append(f"result:{reason.name.lower()}")
     if reason in {ResultReason.KO, ResultReason.DOUBLE_KO}:
-        ko_target = 1 if p1.health == 0 and p2.health else 2 if p2.health == 0 and p1.health else None
-        _present(match, "ko", winner or None, ko_target, p1 if ko_target == 1 else p2, result=reason)
+        ko_target = (
+            1 if p1.health == 0 and p2.health else 2 if p2.health == 0 and p1.health else None
+        )
+        _present(
+            match, "ko", winner or None, ko_target, p1 if ko_target == 1 else p2, result=reason
+        )
     if match.phase is MatchPhase.RESULTS:
         _present(match, "result", winner or None, None, p1 if winner != 2 else p2, result=reason)
 
@@ -314,7 +438,15 @@ def _advance_terminal(match: MatchState, inputs: tuple[InputFrame, InputFrame]) 
             assert result is not None
             actor = result.winner or None
             fighter = match.p1 if result.winner != 2 else match.p2
-            _present(match, "finisher", actor, None, fighter, move=result.finisher_variant, result=result.reason)
+            _present(
+                match,
+                "finisher",
+                actor,
+                None,
+                fighter,
+                move=result.finisher_variant,
+                result=result.reason,
+            )
     elif match.phase is MatchPhase.FINISHER_WINDOW:
         skip = bool((inputs[0].pressed | inputs[1].pressed) & Action.START)
         match.phase_ticks -= 1
@@ -346,8 +478,28 @@ def tick(match: MatchState, inputs: tuple[InputFrame, InputFrame]) -> None:
     _facing(match.p1, match.p2)
     _start_attack(match.p1, match.p1.definition, p1_frame.pressed, match.events)
     _start_attack(match.p2, match.p2.definition, p2_frame.pressed, match.events)
-    _resolve_strike(match.p1, match.p2, match.p1.definition, match.p2.definition, p2_frame, match.events, match, 1, 2)
-    _resolve_strike(match.p2, match.p1, match.p2.definition, match.p1.definition, p1_frame, match.events, match, 2, 1)
+    _resolve_strike(
+        match.p1,
+        match.p2,
+        match.p1.definition,
+        match.p2.definition,
+        p2_frame,
+        match.events,
+        match,
+        1,
+        2,
+    )
+    _resolve_strike(
+        match.p2,
+        match.p1,
+        match.p2.definition,
+        match.p1.definition,
+        p1_frame,
+        match.events,
+        match,
+        2,
+        1,
+    )
     _resolve_throw(match.p1, match.p2, p2_frame, match.events, match, 1, 2)
     _resolve_throw(match.p2, match.p1, p1_frame, match.events, match, 2, 1)
     for player, fighter in enumerate((match.p1, match.p2), 1):

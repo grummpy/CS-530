@@ -69,10 +69,13 @@ def test_rolling_cache_is_byte_bounded_lru_and_teardown_releases_memory() -> Non
     class Surface:
         def __init__(self, size: tuple[int, int]) -> None:
             self.size = size
+
         def get_size(self) -> tuple[int, int]:
             return self.size
+
         def get_bytesize(self) -> int:
             return 4
+
     cache = RollingFrameCache(32)
     assert cache.put(0, Surface((2, 2))) and cache.put(1, Surface((2, 2)))
     cache.get(0)
@@ -102,14 +105,11 @@ def test_decode_failure_falls_back_once() -> None:
     assert playback.diagnostic == "Finisher media failed — showing results."
 
 
-def test_transform_failure_falls_back_once() -> None:
+def test_invalid_decoded_surface_falls_back_once() -> None:
     source = SimpleNamespace(convert_alpha=lambda: object())
     playback = FinisherPlayback("master_chef_vs_mr_president")
     pygame = SimpleNamespace(
         image=SimpleNamespace(load=lambda _: source),
-        transform=SimpleNamespace(
-            smoothscale=lambda *_: (_ for _ in ()).throw(ValueError("bad transform"))
-        ),
         error=RuntimeError,
     )
     assert not playback.preload_one(pygame) and playback.fallback
