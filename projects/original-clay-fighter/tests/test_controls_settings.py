@@ -11,13 +11,20 @@ from fighter.sim.kernel import SessionKernel
 
 def test_router_converts_physical_state_to_tick_edges_without_shell_leakage() -> None:
     router = InputRouter()
-    router.event("key", "key:106", True)
+    router.event("key", "key:122", True)
     router.event("key", "key:13", True)
     first = router.frames()[0]
     assert first.held == Action.LIGHT and first.pressed == Action.LIGHT
     assert router.shell_edges() == {SemanticAction.CONFIRM}
     assert router.frames()[0].pressed == 0
     assert router.shell_edges() == set()
+
+
+def test_player_one_arrow_keys_drive_ruby_and_not_the_cpu_slot() -> None:
+    router = InputRouter()
+    router.event("key", "key:1073741903", True)
+    p1, p2 = router.frames()
+    assert p1.held == Action.RIGHT and p2.held == 0
 
 
 def test_router_supports_mixed_controller_assignment_and_remap_conflicts() -> None:
@@ -33,8 +40,8 @@ def test_router_supports_mixed_controller_assignment_and_remap_conflicts() -> No
 
 def test_quick_press_and_release_survives_until_next_simulation_tick() -> None:
     router = InputRouter()
-    router.event("key", "key:106", True)
-    router.event("key", "key:106", False)
+    router.event("key", "key:122", True)
+    router.event("key", "key:122", False)
     first = router.frames()[0]
     assert first.held == Action.LIGHT and first.pressed == Action.LIGHT
     second = router.frames()[0]
@@ -87,13 +94,15 @@ def test_invalid_or_corrupt_settings_recover_to_defaults(tmp_path, payload) -> N
     path = tmp_path / "settings.json"
     path.write_text(json.dumps(payload), encoding="utf-8")
     settings, diagnostic = load(path)
-    assert diagnostic is not None and settings.version == 3
+    assert diagnostic is not None and settings.version == 4
     with pytest.raises(ValueError):
         validate(payload)
 
 
 def test_version_zero_settings_migrate_to_current_defaults() -> None:
-    assert validate({"version": 0}).version == 3
+    assert validate({"version": 0}).version == 4
+    migrated = validate({"version": 3, "bindings": [{}, {}]})
+    assert migrated.bindings[0]["right"] == "key:1073741903"
 
 
 def test_training_reset_and_move_list_onboarding_are_reachable() -> None:

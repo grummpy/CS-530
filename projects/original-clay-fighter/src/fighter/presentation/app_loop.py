@@ -443,8 +443,8 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                     "Remap P1 light",
                 ],
                 "controls": [
-                    "P1: A/D/W/S + J/K/L/I/U",
-                    "P2: arrows + keypad 1/2/3/0/5",
+                    "P1: arrows + Z/X/C/V/B",
+                    "CPU opponent: Easy / Medium / Hard",
                     "Controller: D-pad + buttons 0/1/2/3",
                     "Remap via settings.json",
                 ],

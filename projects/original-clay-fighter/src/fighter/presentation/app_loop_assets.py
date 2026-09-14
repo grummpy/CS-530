@@ -143,14 +143,14 @@ def draw_match(
     screen.blit(key_font.render("P1", True, (255, 95, 133)), (20, 637))
     x = 55
     for key, label in (
-        ("A/D", "Move"),
-        ("W", "Jump"),
-        ("S", "Crouch"),
-        ("J", "Light"),
-        ("K", "Medium"),
-        ("L", "Heavy"),
-        ("I", "Special"),
-        ("U", "Throw"),
+        ("←/→", "Move"),
+        ("↑", "Jump"),
+        ("↓", "Crouch"),
+        ("Z", "Light"),
+        ("X", "Medium"),
+        ("C", "Heavy"),
+        ("V", "Special"),
+        ("B", "Throw"),
     ):
         x += keycap(x, 632, key, label, (166, 45, 82))
     if cpu_difficulty:

@@ -33,8 +33,8 @@ opponent finisher using the approved fighter and arena artwork.
 
 | Player | Move | Block | Attacks |
 | --- | --- | --- | --- |
-| Player 1 | `A` / `D`; `W` jump | `S` crouch/back | `J` light, `K` medium, `L` heavy, `I` special, `U` throw |
-| Player 2 | Left / Right; Up jump | Down crouch/back | Keypad `1` light, `2` medium, `3` heavy, `0` special, `5` throw |
+| Player 1 | Left / Right; Up jump | Down crouch/back | `Z` light, `X` medium, `C` heavy, `V` special, `B` throw |
+| Player 2 | `A` / `D`; `W` jump | `S` crouch/back | `J` light, `K` medium, `L` heavy, `I` special, `U` throw |
 
 `R` resets the match and `Esc` exits the window.
 

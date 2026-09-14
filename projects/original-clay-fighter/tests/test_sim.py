@@ -176,6 +176,20 @@ def test_cancel_requires_confirm_and_advances_once():
     assert game.match.p1.cancel_depth == 1
 
 
+def test_attacks_connect_and_fighters_stay_in_bounds_at_both_corners():
+    for p1_x, p2_x in ((108, 170), (1100, 1166)):
+        game = SessionKernel(p1_id="rhinestone_angel", p2_id="mr_president")
+        game.match.p1.x, game.match.p2.x = p1_x, p2_x
+        game.tick((InputFrame.from_held(0, Action.LIGHT), InputFrame()))
+        for _ in range(14):
+            game.tick()
+        assert game.match.p2.health < 1000
+        p1_left, p1_right = game.match.p1.x - 28, game.match.p1.x + 28
+        p2_left, p2_right = game.match.p2.x - 34, game.match.p2.x + 34
+        assert p1_left >= 80 and p1_right <= 1200
+        assert p2_left >= 80 and p2_right <= 1200
+
+
 def test_results_are_immutable_for_ko_double_ko_timeout_and_training():
     game = SessionKernel()
     game.match.p1.health, game.match.p2.health = 0, 0

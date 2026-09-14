@@ -504,6 +504,8 @@ def tick(match: MatchState, inputs: tuple[InputFrame, InputFrame]) -> None:
             if queued:
                 fighter.buffered_action, fighter.buffer_ticks = queued, 10
         match.hitstop_ticks -= 1
+        _clamp_and_separate(match.p1, match.p2)
+        _facing(match.p1, match.p2)
         match.tick += 1
         return
     p1_frame, p2_frame = inputs

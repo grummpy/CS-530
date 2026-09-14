@@ -9,7 +9,7 @@ Date: 2026-09-13
 - Added clearer hit, block, movement, special, knockout, and clay-impact effects.
 - Kept all 12 fighter-versus-opponent fatality sequences wired and corrected their frame cache so opening and ending frames remain available during playback.
 - Added an in-match keyboard guide for both players, fighter names, health, special meters, shield feedback, and the 99-second clock.
-- Changed Player 1 to familiar keyboard controls: WASD movement, J/K/L attacks, I special, and U throw. Player 2 uses arrows and the numeric keypad.
+- Player 1 uses arrow-key movement, Z/X/C attacks, V special, and B throw.
 - Added mouse hover focus and left-click confirmation through the title, fighter selection, arena selection, and other menu screens. Right-click performs Back.
 
 ## Verification

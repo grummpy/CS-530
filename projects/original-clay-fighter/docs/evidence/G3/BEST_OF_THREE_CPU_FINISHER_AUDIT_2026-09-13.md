@@ -32,3 +32,13 @@ Verification: Ruff passed, 54 Pytest tests passed, all 12 finishers decoded all
   jet approach, falling payloads, layered clay fireball, crater, irregular clay
   splatter, and recognizable wing, guitar, boot, and hair debris.
 - Removed the large rectangular end banner from that sequence.
+
+## Control, corner, and finisher correction — 2026-09-14
+
+- Player 1 now uses the arrow keys; Z/X/C attack, V activates the special, and B
+  throws. Settings version 4 migrates existing launcher installations.
+- Wall correction now continues during impact freeze, keeping both hurt boxes
+  inside the arena and follow-up attacks in range at either corner.
+- Automated corner tests confirm damage connects at the left and right walls.
+- Removed the remaining rectangular ending panel from every finisher family and
+  visually reviewed a contact sheet containing all 12 final frames.

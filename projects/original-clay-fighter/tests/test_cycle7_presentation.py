@@ -127,7 +127,7 @@ def test_audio_safe_mode_survives_init_load_and_channel_failures() -> None:
 
 def test_audio_settings_migrate_and_bound_levels() -> None:
     settings = validate({"version": 1, "audio": {"master": 25, "muted": ["music"]}})
-    assert settings.version == 3 and settings.audio.master == 25 and settings.audio.music == 55
+    assert settings.version == 4 and settings.audio.master == 25 and settings.audio.music == 55
     try:
         validate({"audio": {"sfx": 101}})
     except ValueError:

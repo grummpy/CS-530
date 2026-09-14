@@ -73,19 +73,19 @@ CONTROLLER_DEFAULTS = {
 
 def default_bindings() -> list[dict[str, str]]:
     """Return serializable bindings; key values deliberately use stable pygame key codes."""
-    # Familiar keyboard layout: WASD movement with the right hand on J/K/L/I/U.
-    p1 = ("97", "100", "119", "115", "106", "107", "108", "105", "117")
-    p2 = (
+    # Player 1 uses the arrow cluster and an arcade-style left-hand attack row.
+    p1 = (
         "1073741904",
         "1073741903",
         "1073741906",
         "1073741905",
-        "1073741913",
-        "1073741914",
-        "1073741915",
-        "1073741922",
-        "1073741917",
+        "122",
+        "120",
+        "99",
+        "118",
+        "98",
     )
+    p2 = ("97", "100", "119", "115", "106", "107", "108", "105", "117")
     names = ("left", "right", "up", "down", "light", "medium", "heavy", "special", "throw")
     common = {
         "confirm": "key:13",

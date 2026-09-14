@@ -194,10 +194,13 @@ def render(winner: str, loser: str, frame: int) -> Image.Image:
         if beat == 4:
             splat(draw, 475, 292, 82, FIGHTERS.index(loser) + 12)
     if frame >= 24 and winner != "mr_president":
-        draw.rounded_rectangle(
-            (110, 250, 530, 312), 18, fill=(12, 7, 20, 225), outline=ACCENTS[winner], width=4
+        draw.text(
+            (250, 294),
+            "CLAYMAGEDDON!",
+            fill=(255, 244, 210, 255),
+            stroke_width=2,
+            stroke_fill=(38, 7, 19, 255),
         )
-        draw.text((267, 274), "CLAYMAGEDDON!", fill=(255, 244, 210, 255))
     return image.convert("RGB")
 
 
