@@ -3,31 +3,41 @@
   "fighter_id": "master_chef",
   "pivot": {
     "x": 256,
-    "y": 500
+    "y": 511
   },
   "source": "sprites/premium_*.png",
   "usage": "Premium approved clay pose sheet frames wired to gameplay states",
   "clips": {
     "idle": {
       "frames": [
-        "premium_00.png"
+        "premium_00.png",
+        "premium_00.png",
+        "premium_00.png",
+        "premium_14.png"
       ],
       "fps": 8
     },
     "walk": {
       "frames": [
+        "premium_00.png",
+        "premium_01.png",
+        "premium_02.png",
         "premium_01.png"
       ],
       "fps": 12
     },
     "run": {
       "frames": [
-        "premium_02.png"
+        "premium_01.png",
+        "premium_02.png",
+        "premium_02.png",
+        "premium_01.png"
       ],
       "fps": 12
     },
     "jump": {
       "frames": [
+        "premium_03.png",
         "premium_03.png"
       ],
       "fps": 12
@@ -52,25 +62,38 @@
     },
     "light": {
       "frames": [
-        "premium_07.png"
+        "premium_00.png",
+        "premium_07.png",
+        "premium_07.png",
+        "premium_00.png"
       ],
       "fps": 12
     },
     "medium": {
       "frames": [
-        "premium_08.png"
+        "premium_00.png",
+        "premium_08.png",
+        "premium_08.png",
+        "premium_00.png"
       ],
       "fps": 12
     },
     "heavy": {
       "frames": [
-        "premium_09.png"
+        "premium_00.png",
+        "premium_09.png",
+        "premium_09.png",
+        "premium_00.png"
       ],
       "fps": 12
     },
     "kitchen_rush": {
       "frames": [
-        "premium_10.png"
+        "premium_00.png",
+        "premium_10.png",
+        "premium_09.png",
+        "premium_10.png",
+        "premium_00.png"
       ],
       "fps": 12
     },

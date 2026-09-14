@@ -41,6 +41,7 @@ def new_match(
 
 
 def reset_round(match: MatchState) -> None:
+    score = (match.p1_round_wins, match.p2_round_wins, match.round_number + 1, match.first_to)
     fresh = new_match(match.seed, match.p1.fighter_id, match.p2.fighter_id, match.training)
     (
         match.p1,
@@ -53,6 +54,7 @@ def reset_round(match: MatchState) -> None:
         match.phase_ticks,
     ) = (fresh.p1, fresh.p2, fresh.tick, fresh.phase, [], fresh.round_ticks, None, 0)
     match.presentation_events = []
+    match.p1_round_wins, match.p2_round_wins, match.round_number, match.first_to = score
 
 
 def _push_interval(fighter: FighterState) -> tuple[int, int]:
@@ -401,8 +403,13 @@ def _classify_terminal(match: MatchState) -> None:
     else:
         return
     winner = 0 if p1.health == p2.health else 1 if p1.health > p2.health else 2
+    if winner == 1:
+        match.p1_round_wins += 1
+    elif winner == 2:
+        match.p2_round_wins += 1
+    set_complete = max(match.p1_round_wins, match.p2_round_wins) >= match.first_to
     variant = None
-    if reason is ResultReason.KO and winner:
+    if reason is ResultReason.KO and winner and set_complete:
         victor, defeated = (p1, p2) if winner == 1 else (p2, p1)
         variant = f"{victor.fighter_id}_vs_{defeated.fighter_id}"
     match.result = ResultPayload(reason, winner, match.tick, p1.health, p2.health, variant)
@@ -433,20 +440,24 @@ def _advance_terminal(match: MatchState, inputs: tuple[InputFrame, InputFrame]) 
     if match.phase is MatchPhase.KO_HOLD:
         match.phase_ticks -= 1
         if match.phase_ticks <= 0:
-            match.phase, match.phase_ticks = MatchPhase.FINISHER_WINDOW, FINISHER_WINDOW_TICKS
             result = match.result
             assert result is not None
             actor = result.winner or None
             fighter = match.p1 if result.winner != 2 else match.p2
-            _present(
-                match,
-                "finisher",
-                actor,
-                None,
-                fighter,
-                move=result.finisher_variant,
-                result=result.reason,
-            )
+            if result.finisher_variant:
+                match.phase, match.phase_ticks = MatchPhase.FINISHER_WINDOW, FINISHER_WINDOW_TICKS
+                _present(
+                    match,
+                    "finisher",
+                    actor,
+                    None,
+                    fighter,
+                    move=result.finisher_variant,
+                    result=result.reason,
+                )
+            else:
+                match.phase, match.phase_ticks = MatchPhase.RESULTS, 0
+                _present(match, "result", actor, None, fighter, result=result.reason)
     elif match.phase is MatchPhase.FINISHER_WINDOW:
         skip = bool((inputs[0].pressed | inputs[1].pressed) & Action.START)
         match.phase_ticks -= 1

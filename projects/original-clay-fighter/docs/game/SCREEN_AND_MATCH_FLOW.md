@@ -15,11 +15,9 @@ mouse click; Enter and Space also enter selection.
 ## Selection screen
 
 Each card shows the fighter name, portrait, and satirical in-world slogan.
-Click the upper half of a card to choose Player 1 and the lower half to choose
-Player 2. Press `C` to toggle CPU control. CPU selection draws a seeded random
-opponent from the other three fighters, and the bot approaches and chooses
-attacks during the match. Select one of the three arena buttons, then activate
-the **FIGHT!** button.
+Choose Player 1 and the CPU fighter from their cards. The CPU difficulty control
+cycles through Easy, Medium, and Hard. Select one of the three arenas, then
+activate **BEGIN MATCH**. Every visible selection supports mouse hover and click.
 
 ## Match HUD and controls
 
@@ -28,8 +26,10 @@ fighter's health bar, a gold special meter, and the timer. Damage fills the
 defender's special meter; at a full meter, the special button starts that
 fighter's special sequence. Holding down (`S` for Player 1; Down Arrow for
 Player 2) activates the blue shield ring and reduces incoming damage to one
-third. A KO or timeout plays the appropriate winner-versus-opponent finisher
-sequence; the fighter with more health wins a timeout.
+third. A versus match is best of three. The HUD shows the round and both round-win
+scores. Press Enter or click after rounds one and two to continue. When a fighter
+earns the second win by KO, the game plays the appropriate character-versus-
+opponent finisher using the approved fighter and arena artwork.
 
 | Player | Move | Block | Attacks |
 | --- | --- | --- | --- |

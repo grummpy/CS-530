@@ -1,53 +1,180 @@
-"""Render twelve editable, non-photoreal clay finisher animatics and MP4s.
+"""Build character-authentic 3-second clay finishers and review MP4s."""
 
-Each sequence is 3 seconds at 10 fps. The PNG frames are the runtime source;
-the MP4 is a review/export deliverable encoded from those same frames.
-"""
-from pathlib import Path
-from PIL import Image, ImageDraw
+from __future__ import annotations
+
+import math
 import subprocess
+from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageEnhance
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "assets" / "finishers"; OUT.mkdir(parents=True, exist_ok=True)
+OUT = ROOT / "assets" / "finishers"
 FIGHTERS = ("rhinestone_angel", "mr_president", "tech_billionaire", "master_chef")
-PALETTES = {"rhinestone_angel":((227,65,138),(255,202,66)),"mr_president":((255,94,0),(23,54,110)),"tech_billionaire":((24,214,220),(72,75,82)),"master_chef":((246,225,188),(239,148,87))}
-MODES = {"rhinestone_angel":"five-beat star-guitar clay crush","mr_president":"rotary-phone airstrike confetti blast","tech_billionaire":"satellite-orb clay disassembly","master_chef":"knife-and-salmon kitchen rush"}
+STAGES = (
+    "roadside_truck_stop_concept.png",
+    "executive_lawn_concept.png",
+    "electric_assembly_hall_concept.png",
+)
+ACCENTS = {
+    "rhinestone_angel": (255, 61, 153, 255),
+    "mr_president": (255, 113, 24, 255),
+    "tech_billionaire": (42, 229, 230, 255),
+    "master_chef": (255, 196, 91, 255),
+}
 
-def puppet(draw, x, y, body, accent, defeated=False):
-    if defeated:
-        draw.ellipse((x-70,y-15,x+72,y+26),fill=(126,24,32),outline=(32,18,26),width=3); return
-    draw.ellipse((x-20,y-110,x+20,y-70),fill=(238,145,94),outline=(32,25,30),width=3)
-    draw.rounded_rectangle((x-30,y-70,x+30,y),radius=10,fill=body,outline=(32,25,30),width=3)
-    draw.rectangle((x-25,y,x-6,y+70),fill=body,outline=(32,25,30),width=3);draw.rectangle((x+6,y,x+25,y+70),fill=body,outline=(32,25,30),width=3)
-    draw.line((x-28,y-55,x-55,y-25),fill=accent,width=8);draw.line((x+28,y-55,x+55,y-25),fill=accent,width=8)
 
-def render(winner, loser, frame):
-    w,h=640,360; im=Image.new("RGB",(w,h),(37,39,49)); d=ImageDraw.Draw(im); body,accent=PALETTES[winner]; lbody,laccent=PALETTES[loser]
-    d.rectangle((0,262,w,h),fill=(77,71,65)); d.text((18,16),f"{winner.replace('_',' ').upper()}  //  FINISHER",fill=(238,236,225))
-    beat=frame//6; defeated=beat>=4
-    puppet(d,180,250,body,accent); puppet(d,465,250,lbody,laccent,defeated)
-    # Distinct non-photoreal action language for each winner.
-    if winner=="rhinestone_angel":
-        d.polygon([(210,148),(245,192),(188,192)],fill=accent); d.line((180,185,430,210),fill=(114,50,160),width=16)
-        for i in range(min(beat,5)): d.ellipse((415-i*12,165-i*8,435-i*12,185-i*8),fill=(255,205,52))
-    elif winner=="mr_president":
-        d.rounded_rectangle((130,140,180,185),radius=6,fill=(24,37,65)); d.ellipse((143,151,153,161),fill=(255,104,0));
-        if beat>=2:
-            for jetx in (240,340,440): d.polygon([(jetx,80),(jetx+28,88),(jetx,96)],fill=(140,153,164)); d.line((jetx+8,96,jetx+8,190),fill=(255,188,46),width=4)
-    elif winner=="tech_billionaire":
-        d.ellipse((145,125,185,165),outline=accent,width=8)
-        for i in range(beat+1): d.ellipse((415+i*9,160-i*10,435+i*9,180-i*10),fill=accent,outline=(20,30,35),width=2)
+def fighter_art(fighter: str, index: int) -> Image.Image:
+    path = ROOT / "assets" / "characters" / fighter / "sprites" / f"premium_{index:02}.png"
+    art = Image.open(path).convert("RGBA")
+    art = art.crop(art.getbbox() or (0, 0, art.width, art.height))
+    art.thumbnail((205, 205), Image.Resampling.LANCZOS)
+    return art
+
+
+def grounded(canvas: Image.Image, art: Image.Image, x: int, angle: float = 0) -> None:
+    if angle:
+        art = art.rotate(angle, Image.Resampling.BICUBIC, expand=True)
+    canvas.alpha_composite(art, (x - art.width // 2, 315 - art.height))
+
+
+def splat(draw: ImageDraw.ImageDraw, x: int, y: int, radius: int, seed: int) -> None:
+    points = []
+    for i in range(18):
+        angle = i * math.tau / 18
+        reach = radius * (0.62 + ((i * 17 + seed * 11) % 9) / 16)
+        points.append((x + math.cos(angle) * reach, y + math.sin(angle) * reach * 0.58))
+    draw.polygon(points, fill=(139, 17, 39, 245), outline=(76, 8, 24, 255), width=3)
+    for i in range(14):
+        dx, dy = (
+            ((i * 37 + seed * 19) % (radius * 3)) - radius * 1.5,
+            ((i * 23 + seed * 7) % radius) - radius * 0.7,
+        )
+        r = 3 + i % 5
+        draw.ellipse((x + dx - r, y + dy - r, x + dx + r, y + dy + r), fill=(218, 44, 57, 235))
+
+
+def render(winner: str, loser: str, frame: int) -> Image.Image:
+    stage = STAGES[(FIGHTERS.index(winner) + FIGHTERS.index(loser)) % len(STAGES)]
+    image = (
+        Image.open(ROOT / "assets" / "stages" / stage)
+        .convert("RGB")
+        .resize((640, 360), Image.Resampling.LANCZOS)
+        .convert("RGBA")
+    )
+    image = ImageEnhance.Brightness(image).enhance(0.48)
+    draw = ImageDraw.Draw(image)
+    draw.rectangle((0, 0, 640, 42), fill=(7, 5, 15, 220))
+    draw.rectangle((0, 326, 640, 360), fill=(7, 5, 15, 220))
+    draw.text(
+        (18, 14),
+        f"{winner.replace('_', ' ').upper()}  •  FINAL CLAY",
+        fill=(255, 235, 174, 255),
+        stroke_width=1,
+        stroke_fill=(30, 8, 20, 255),
+    )
+    beat = min(4, frame // 6)
+    victor, victim = (
+        fighter_art(winner, 10 if frame >= 5 else 14),
+        fighter_art(loser, 11 if frame < 20 else 12),
+    )
+    victim_x = 465 + int(math.sin(frame * 2.5) * (5 + beat * 2))
+
+    if winner == "rhinestone_angel":
+        grounded(image, victor, 185, (-28, 38, -20, 48, 62)[beat])
+        if beat < 4:
+            grounded(image, victim, victim_x, -beat * 5)
+            for hit in range(beat + 1):
+                cx, cy = 415 + hit * 12, 180 - hit * 9
+                draw.regular_polygon((cx, cy, 18), 8, fill=(255, 217, 67, 245))
+        else:
+            splat(draw, 475, 292, 78, FIGHTERS.index(loser))
+    elif winner == "mr_president":
+        grounded(image, victor, 175)
+        if frame < 18:
+            grounded(image, victim, victim_x)
+        draw.rounded_rectangle(
+            (205, 160, 237, 202), 6, fill=(30, 40, 66, 255), outline=(210, 220, 230, 255), width=2
+        )
+        if frame >= 9:
+            for j in range(3):
+                jet_x = 170 + ((frame * 28 + j * 190) % 700)
+                draw.polygon(
+                    ((jet_x, 70 + j * 18), (jet_x + 52, 80 + j * 18), (jet_x, 91 + j * 18)),
+                    fill=(186, 202, 215, 255),
+                )
+        if frame >= 18:
+            radius = min(105, 18 + (frame - 18) * 11)
+            draw.ellipse(
+                (465 - radius, 250 - radius, 465 + radius, 250 + radius),
+                fill=(255, 143, 25, 235),
+                outline=(255, 235, 122, 255),
+                width=8,
+            )
+            splat(draw, 475, 300, min(78, radius), FIGHTERS.index(loser) + 4)
+    elif winner == "tech_billionaire":
+        grounded(image, victor, 180)
+        if beat < 4:
+            grounded(image, victim, victim_x, beat * 4)
+        for j in range(min(8, 1 + frame // 3)):
+            angle = frame * 0.22 + j * math.tau / max(1, min(8, 1 + frame // 3))
+            ox, oy = 465 + int(math.cos(angle) * 75), 210 + int(math.sin(angle) * 62)
+            draw.ellipse(
+                (ox - 10, oy - 10, ox + 10, oy + 10),
+                fill=ACCENTS[winner],
+                outline=(230, 255, 255, 255),
+                width=3,
+            )
+        if beat == 4:
+            splat(draw, 470, 292, 78, FIGHTERS.index(loser) + 8)
     else:
-        d.line((155,190,260,145),fill=(215,220,225),width=9); d.ellipse((242,145,275,205),fill=(235,145,93)); d.polygon([(275,160),(300,145),(292,180)],fill=(48,84,107))
-    if defeated:
-        for i in range(24):
-            px=430+(i*29)%150; py=210+(i*17)%75; d.ellipse((px,py,px+9,py+7),fill=((156,28,38) if i%2 else (236,80,58)))
-        d.text((236,315),"CLAY SPLAT!",fill=(255,226,160))
-    return im
+        grounded(image, victor, 180, -8 + beat * 5)
+        if beat < 4:
+            grounded(image, victim, victim_x, -beat * 7)
+        for j in range(1 + beat):
+            y = 145 + j * 31
+            draw.line((260, y + 35, 520, y - 18), fill=(240, 248, 250, 255), width=8)
+            draw.line((260, y + 35, 520, y - 18), fill=ACCENTS[winner], width=2)
+        if beat == 4:
+            splat(draw, 475, 292, 82, FIGHTERS.index(loser) + 12)
+    if frame >= 24:
+        draw.rounded_rectangle(
+            (110, 250, 530, 312), 18, fill=(12, 7, 20, 225), outline=ACCENTS[winner], width=4
+        )
+        draw.text((267, 274), "CLAYMAGEDDON!", fill=(255, 244, 210, 255))
+    return image.convert("RGB")
 
-for winner in FIGHTERS:
-    for loser in FIGHTERS:
-        if winner==loser: continue
-        ident=f"{winner}_vs_{loser}"; directory=OUT/ident/"frames"; directory.mkdir(parents=True,exist_ok=True)
-        for frame in range(30): render(winner,loser,frame).save(directory/f"{frame:03}.png")
-        subprocess.run(["ffmpeg","-y","-loglevel","error","-framerate","10","-i",str(directory/"%03d.png"),"-pix_fmt","yuv420p","-movflags","+faststart",str(OUT/f"{ident}.mp4")],check=True)
+
+def main() -> None:
+    OUT.mkdir(parents=True, exist_ok=True)
+    for winner in FIGHTERS:
+        for loser in FIGHTERS:
+            if winner == loser:
+                continue
+            identifier = f"{winner}_vs_{loser}"
+            directory = OUT / identifier / "frames"
+            directory.mkdir(parents=True, exist_ok=True)
+            for frame in range(30):
+                render(winner, loser, frame).save(directory / f"{frame:03}.png", optimize=True)
+            subprocess.run(
+                [
+                    "ffmpeg",
+                    "-y",
+                    "-loglevel",
+                    "error",
+                    "-framerate",
+                    "10",
+                    "-i",
+                    str(directory / "%03d.png"),
+                    "-pix_fmt",
+                    "yuv420p",
+                    "-movflags",
+                    "+faststart",
+                    str(OUT / f"{identifier}.mp4"),
+                ],
+                check=True,
+            )
+
+
+if __name__ == "__main__":
+    main()

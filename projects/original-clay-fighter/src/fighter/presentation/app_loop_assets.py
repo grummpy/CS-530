@@ -18,6 +18,7 @@ from fighter.presentation.assets import (
 )
 from fighter.presentation.assets import load_stage as load_stage_definition
 from fighter.presentation.finishers import FinisherPlayback, fallback_card
+from fighter.sim.bits import Action
 from fighter.sim.enums import MatchPhase
 
 
@@ -27,6 +28,8 @@ class MatchAssets:
     manifests: dict[str, Any]
     cache: TransformCache = field(default_factory=TransformCache)
     finisher: FinisherPlayback | None = None
+    finisher_display_index: int = -1
+    finisher_display: Any | None = None
 
 
 def load_match_assets(
@@ -55,6 +58,7 @@ def draw_match(
     assets: MatchAssets,
     stage_id: str = "electric_assembly_hall",
     effects: Any | None = None,
+    cpu_difficulty: str | None = None,
 ) -> None:
     """Render gameplay information without making rendering part of simulation."""
     match = game.match
@@ -73,10 +77,17 @@ def draw_match(
         ((match.p1, (196, 75, 67)), (match.p2, (60, 150, 182)))
     ):
         manifest = assets.manifests[fighter.fighter_id]
-        clip_name, _ = resolve_clip(manifest, fighter, 0, None, index + 1)
+        held = int(Action.DOWN) if SemanticAction.DOWN in actions[index] else 0
+        result_winner = match.result.winner if match.result is not None else None
+        clip_name, _ = resolve_clip(manifest, fighter, held, result_winner, index + 1)
         frames = assets.cache.load_clip(pygame, manifest, clip_name, fighter.facing)
         if frames:
-            frame = frames[frame_index(match.tick, manifest.clips[clip_name].fps, len(frames))]
+            animation_tick = match.tick
+            if fighter.attack_ticks and fighter.attack_move in fighter.definition.moves:
+                animation_tick = (
+                    fighter.definition.moves[fighter.attack_move].total - fighter.attack_ticks
+                )
+            frame = frames[frame_index(animation_tick, manifest.clips[clip_name].fps, len(frames))]
             pivot, _ = resolved_pivot(manifest.pivot, (512, 512))
             screen.blit(frame, placement(fighter.x, fighter.y, pivot, (512, 512), 320 / 512))
         else:
@@ -105,6 +116,10 @@ def draw_match(
         pygame.draw.rect(screen, (255, 188, 45), (x if left else x + 500 - width, 63, width, 10))
     seconds = (match.round_ticks + 59) // 60
     screen.blit(font.render(f"{seconds:02d}", True, (255, 240, 190)), (612, 32))
+    score_font = pygame.font.SysFont("arial", 16, bold=True)
+    score = f"BEST OF 3  •  ROUND {match.round_number}  •  {match.p1_round_wins}  —  {match.p2_round_wins}"
+    score_surface = score_font.render(score, True, (255, 232, 132))
+    screen.blit(score_surface, score_surface.get_rect(center=(640, 83)))
     control_panel = pygame.Surface((1280, 96), pygame.SRCALPHA)
     control_panel.fill((7, 5, 15, 218))
     screen.blit(control_panel, (0, 624))
@@ -132,19 +147,23 @@ def draw_match(
         ("U", "Throw"),
     ):
         x += keycap(x, 632, key, label, (166, 45, 82))
-    screen.blit(key_font.render("P2", True, (91, 211, 255)), (20, 675))
-    x = 55
-    for key, label in (
-        ("←/→", "Move"),
-        ("↑", "Jump"),
-        ("↓", "Crouch"),
-        ("1", "Light"),
-        ("2", "Medium"),
-        ("3", "Heavy"),
-        ("0", "Special"),
-        ("5", "Throw"),
-    ):
-        x += keycap(x, 670, key, label, (32, 119, 164))
+    if cpu_difficulty:
+        cpu_label = f"CPU OPPONENT  •  {cpu_difficulty.upper()} DIFFICULTY"
+        screen.blit(key_font.render(cpu_label, True, (91, 211, 255)), (20, 677))
+    else:
+        screen.blit(key_font.render("P2", True, (91, 211, 255)), (20, 675))
+        x = 55
+        for key, label in (
+            ("←/→", "Move"),
+            ("↑", "Jump"),
+            ("↓", "Crouch"),
+            ("1", "Light"),
+            ("2", "Medium"),
+            ("3", "Heavy"),
+            ("0", "Special"),
+            ("5", "Throw"),
+        ):
+            x += keycap(x, 670, key, label, (32, 119, 164))
     screen.blit(
         info_font.render(
             "Esc Pause  •  Tab Moves" + ("  •  R Reset" if training else ""), True, (235, 230, 240)
@@ -190,11 +209,20 @@ def draw_match(
     if match.result is not None:
         label = result_clip_route(stage_id, match.result.reason.name).upper().replace("_", " ")
         screen.blit(pygame.font.Font(None, 68).render(label, True, (255, 235, 150)), (510, 115))
+        if match.phase is MatchPhase.RESULTS:
+            complete = max(match.p1_round_wins, match.p2_round_wins) >= match.first_to
+            prompt = "ENTER / CLICK: RETURN TO SELECT" if complete else "ENTER / CLICK: NEXT ROUND"
+            prompt_surface = name_font.render(prompt, True, (255, 255, 255))
+            screen.blit(prompt_surface, prompt_surface.get_rect(center=(640, 170)))
     if match.phase is MatchPhase.FINISHER_WINDOW and assets.finisher is not None:
         assert match.result is not None
-        frame = assets.finisher.frame((match.tick - match.result.tick - 30) // 4)
+        frame_index_value = max(0, min(29, (match.tick - match.result.tick - 30) // 6))
+        frame = assets.finisher.frame(frame_index_value)
         if frame is not None:
-            screen.blit(pygame.transform.smoothscale(frame, (1280, 720)), (0, 0))
+            if assets.finisher_display_index != frame_index_value:
+                assets.finisher_display = pygame.transform.smoothscale(frame, (1280, 720))
+                assets.finisher_display_index = frame_index_value
+            screen.blit(assets.finisher_display, (0, 0))
         else:
             fallback_card(pygame, screen, font, label, assets.finisher.diagnostic)
     if paused:

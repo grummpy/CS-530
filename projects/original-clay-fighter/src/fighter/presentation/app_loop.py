@@ -17,6 +17,7 @@ from fighter.presentation.events import PresentationDispatcher
 from fighter.presentation.finishers import FinisherPlayback
 from fighter.presentation.shell import Shell
 from fighter.resource_paths import resource_path
+from fighter.sim.cpu import CpuController
 from fighter.sim.enums import MatchPhase
 from fighter.sim.events import PresentationEvent
 from fighter.sim.kernel import SessionKernel
@@ -178,6 +179,7 @@ def _draw_select(
     background: Any | None,
     fighter_crops: dict[str, Any],
     stage_previews: dict[str, Any],
+    cpu_difficulty: str,
 ) -> None:
     """Render fighter and arena choices as a cinematic versus card."""
     if background is None:
@@ -196,7 +198,13 @@ def _draw_select(
 
     card_specs = (
         (pygame.Rect(42, 100, 350, 420), p1_id, "PLAYER 1", (235, 63, 103), 0),
-        (pygame.Rect(888, 100, 350, 420), p2_id, "PLAYER 2", (52, 178, 224), 1),
+        (
+            pygame.Rect(888, 100, 350, 420),
+            p2_id,
+            f"CPU • {cpu_difficulty.upper()}",
+            (52, 178, 224),
+            1,
+        ),
     )
     for rect, fighter_id, player_label, accent, focus_index in card_specs:
         selected = shell.focus == focus_index
@@ -255,8 +263,20 @@ def _draw_select(
         label = small_font.render(display_name(fighter_id), True, (255, 255, 255))
         screen.blit(label, label.get_rect(center=rect.center))
 
-    fight_rect = pygame.Rect(890, roster_y, 300, 58)
-    fight_selected = shell.focus == 3
+    difficulty_rect = pygame.Rect(802, roster_y, 190, 58)
+    pygame.draw.rect(screen, (35, 28, 50), difficulty_rect, border_radius=12)
+    pygame.draw.rect(
+        screen,
+        (255, 231, 112) if shell.focus == 3 else (91, 190, 220),
+        difficulty_rect,
+        4 if shell.focus == 3 else 2,
+        border_radius=12,
+    )
+    difficulty_label = small_font.render(f"CPU: {cpu_difficulty.upper()}", True, (255, 255, 255))
+    screen.blit(difficulty_label, difficulty_label.get_rect(center=difficulty_rect.center))
+
+    fight_rect = pygame.Rect(1008, roster_y, 190, 58)
+    fight_selected = shell.focus == 4
     pygame.draw.rect(screen, (8, 5, 15), fight_rect.move(0, 5), border_radius=12)
     pygame.draw.rect(
         screen, (225, 61, 91) if fight_selected else (42, 33, 55), fight_rect, border_radius=12
@@ -287,7 +307,8 @@ def _mouse_focus(pygame: Any, screen_name: str, position: tuple[int, int]) -> in
             pygame.Rect(42, 100, 350, 420),
             pygame.Rect(888, 100, 350, 420),
             pygame.Rect(450, 304, 380, 218),
-            pygame.Rect(890, 545, 300, 58),
+            pygame.Rect(802, 545, 190, 58),
+            pygame.Rect(1008, 545, 190, 58),
         )
         return next(
             (index for index, rect in enumerate(regions) if rect.collidepoint(position)), None
@@ -317,6 +338,7 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
     shell, sim_clock = Shell(), FixedStepClock()
     fighters = ("rhinestone_angel", "mr_president", "tech_billionaire", "master_chef")
     p1_id, p2_id, training, game = fighters[0], fighters[1], False, None
+    cpu_difficulty, cpu = "Medium", None
     stage_id = "electric_assembly_hall"
     title_background = _load_title_background(pygame)
     fighter_crops, stage_previews = _load_selection_art(pygame, title_background)
@@ -352,16 +374,27 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
             elif event.type in (pygame.WINDOWFOCUSLOST, pygame.WINDOWMINIMIZED):
                 shell.pause("Focus lost")
                 router.clear()
+            elif event.type == pygame.JOYHATMOTION:
+                for direction in ("up", "down", "left", "right"):
+                    router.event("hat", f"hat:{direction}", False, event.instance_id)
+                direction = {(0, 1): "up", (0, -1): "down", (-1, 0): "left", (1, 0): "right"}.get(
+                    event.value
+                )
+                if direction:
+                    router.event("hat", f"hat:{direction}", True, event.instance_id)
             elif event.type == pygame.MOUSEMOTION and shell.screen != "match":
                 hovered = _mouse_focus(pygame, shell.screen, event.pos)
                 if hovered is not None:
                     shell.focus = hovered
-            elif event.type == pygame.MOUSEBUTTONDOWN and shell.screen != "match":
+            elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
-                    hovered = _mouse_focus(pygame, shell.screen, event.pos)
-                    if hovered is not None:
-                        shell.focus = hovered
+                    if shell.screen == "match":
                         mouse_confirm = True
+                    else:
+                        hovered = _mouse_focus(pygame, shell.screen, event.pos)
+                        if hovered is not None:
+                            shell.focus = hovered
+                            mouse_confirm = True
                 elif event.button == 3:
                     mouse_back = True
             else:
@@ -394,6 +427,7 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                     f"P1: {display_name(p1_id)}",
                     f"P2: {display_name(p2_id)}",
                     f"Stage: {stage_id.replace('_', ' ').title()}",
+                    f"CPU difficulty: {cpu_difficulty}",
                     "Begin match",
                 ],
                 "settings": [
@@ -445,9 +479,13 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                         stage_id = SELECTABLE_STAGES[
                             (SELECTABLE_STAGES.index(stage_id) + 1) % len(SELECTABLE_STAGES)
                         ]
+                    elif shell.focus == 3:
+                        levels = ("Easy", "Medium", "Hard")
+                        cpu_difficulty = levels[(levels.index(cpu_difficulty) + 1) % len(levels)]
                     else:
                         training, shell.screen = False, "match"
                         game, sim_clock = SessionKernel(seed, p1_id, p2_id), FixedStepClock()
+                        cpu = CpuController(cpu_difficulty)
                         match_assets = load_match_assets(pygame, (p1_id, p2_id), stage_id)
                         audio.start_match_music(seed)
                 elif shell.screen == "training":
@@ -520,6 +558,7 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                     title_background,
                     fighter_crops,
                     stage_previews,
+                    cpu_difficulty,
                 )
             else:
                 _draw_menu(
@@ -533,6 +572,21 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                     settings.accessibility.high_contrast,
                 )
         elif game is not None and match_assets is not None:
+            if game.match.phase is MatchPhase.RESULTS and SemanticAction.CONFIRM in edges:
+                complete = max(game.match.p1_round_wins, game.match.p2_round_wins) >= 2
+                if match_assets.finisher is not None:
+                    match_assets.finisher.teardown()
+                    match_assets.finisher = None
+                router.clear()
+                if complete:
+                    shell.screen, shell.focus = "select", 0
+                    audio.stop_match_music()
+                    game = None
+                    continue
+                game.reset()
+                sim_clock.reset()
+                if cpu is not None:
+                    cpu.previous = 0
             if SemanticAction.PAUSE in edges or SemanticAction.BACK in edges:
                 shell.pause("Paused") if not shell.paused else shell.resume()
                 router.clear()
@@ -550,6 +604,8 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                 for _ in range(sim_clock.consume_wall_ms(elapsed)):
                     frames = router.frames()
                     last_actions = (router.actions_for(0), router.actions_for(1))
+                    if cpu is not None and not training:
+                        frames = (frames[0], cpu.frame(game.match))
                     game.tick(frames)
                     result = game.match.result
                     if (
@@ -562,6 +618,7 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                         game.match.phase in {MatchPhase.KO_HOLD, MatchPhase.FINISHER_WINDOW}
                         and match_assets.finisher is not None
                     ):
+                        match_assets.finisher.preload_one(pygame)
                         match_assets.finisher.preload_one(pygame)
                     dispatcher.dispatch(
                         game.presentation_events(),
@@ -587,6 +644,7 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                 match_assets,
                 stage_id,
                 effects,
+                None if training else cpu_difficulty,
             )
         pygame.display.flip()
     settings.bindings = router.bindings

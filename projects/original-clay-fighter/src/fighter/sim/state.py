@@ -102,6 +102,10 @@ class MatchState:
     round_ticks: int = 99 * 60
     result: ResultPayload | None = None
     phase_ticks: int = 0
+    round_number: int = 1
+    p1_round_wins: int = 0
+    p2_round_wins: int = 0
+    first_to: int = 2
 
     def snapshot(self) -> dict[str, object]:
         return {
@@ -114,6 +118,10 @@ class MatchState:
             "round_ticks": self.round_ticks,
             "phase_ticks": self.phase_ticks,
             "result": self.result.snapshot() if self.result else None,
+            "round_number": self.round_number,
+            "p1_round_wins": self.p1_round_wins,
+            "p2_round_wins": self.p2_round_wins,
+            "first_to": self.first_to,
         }
 
 

@@ -31,6 +31,16 @@ def test_router_supports_mixed_controller_assignment_and_remap_conflicts() -> No
         router.set_binding(1, SemanticAction.MEDIUM, "button:0")
 
 
+def test_quick_press_and_release_survives_until_next_simulation_tick() -> None:
+    router = InputRouter()
+    router.event("key", "key:106", True)
+    router.event("key", "key:106", False)
+    first = router.frames()[0]
+    assert first.held == Action.LIGHT and first.pressed == Action.LIGHT
+    second = router.frames()[0]
+    assert second.held == 0 and second.released == Action.LIGHT
+
+
 def test_lifecycle_disconnect_only_marks_assigned_player_and_reconnects() -> None:
     devices = DeviceLifecycle()
     devices.connect(1, "unassigned")

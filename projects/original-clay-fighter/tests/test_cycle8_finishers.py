@@ -18,6 +18,7 @@ from fighter.tools.perf import write_raw_report
 
 def _ko_game() -> SessionKernel:
     game = SessionKernel(p1_id="master_chef", p2_id="mr_president")
+    game.match.p1_round_wins = 1
     game.match.p2.health = 0
     game.tick()
     return game
@@ -45,6 +46,7 @@ def test_timeout_bypasses_finisher_and_reset_tears_lifecycle_down() -> None:
     assert game.match.phase is MatchPhase.RESULTS
     game.reset()
     assert game.match.phase is MatchPhase.FIGHT and game.match.result is None
+    assert game.match.p2_round_wins == 1 and game.match.round_number == 2
 
 
 def test_variant_validation_rejects_partial_or_unsafe_media(tmp_path: Path) -> None:

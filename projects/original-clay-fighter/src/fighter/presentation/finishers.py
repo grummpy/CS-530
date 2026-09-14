@@ -130,7 +130,7 @@ class FinisherPlayback:
         return True
 
     def frame(self, index: int) -> Any | None:
-        return self.cache.get(index % FRAME_COUNT)
+        return self.cache.get(max(0, min(FRAME_COUNT - 1, index)))
 
     def teardown(self) -> None:
         self.cache.clear()

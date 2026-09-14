@@ -38,6 +38,19 @@ POSE_INDEX = {
     "win": 14,
     "lose": 15,
 }
+CLIP_SEQUENCE = {
+    "idle": (0, 0, 0, 14),
+    "walk": (0, 1, 2, 1),
+    "run": (1, 2, 2, 1),
+    "jump": (3, 3),
+    "light": (0, 7, 7, 0),
+    "medium": (0, 8, 8, 0),
+    "heavy": (0, 9, 9, 0),
+    "star_chord": (0, 10, 10, 9, 0),
+    "hostile_takeover": (0, 10, 10, 9, 0),
+    "exosuit_call": (0, 10, 10, 10),
+    "kitchen_rush": (0, 10, 9, 10, 0),
+}
 
 
 def _remove_green(surface: pygame.Surface) -> pygame.Surface:
@@ -76,11 +89,12 @@ def build() -> None:
             pygame.image.save(pose, (destination / f"premium_{index:02d}.png").as_posix())
         manifest_path = PROJECT / "assets" / "characters" / fighter_id / "manifest.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        manifest["pivot"] = {"x": 256, "y": 500}
+        manifest["pivot"] = {"x": 256, "y": 511}
         manifest["source"] = "sprites/premium_*.png"
         manifest["usage"] = "Premium approved clay pose sheet frames wired to gameplay states"
         for clip_name, clip in manifest["clips"].items():
-            clip["frames"] = [f"premium_{POSE_INDEX.get(clip_name, 0):02d}.png"]
+            sequence = CLIP_SEQUENCE.get(clip_name, (POSE_INDEX.get(clip_name, 0),))
+            clip["frames"] = [f"premium_{index:02d}.png" for index in sequence]
         manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     pygame.quit()
 

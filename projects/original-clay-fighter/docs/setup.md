@@ -40,3 +40,6 @@ arrows or D-pad with Enter/controller confirm. Settings are stored outside the
 installation in the user configuration directory and can be changed from the
 Settings menu, including a capture-based P1-light remap. Every menu button also
 supports mouse hover and left-click activation; right-click performs Back.
+Versus mode uses a CPU opponent. Choose Easy, Medium, or Hard on the fighter
+selection screen. A match is first to two round wins; click or press Enter on a
+round result to continue.

@@ -159,6 +159,7 @@ class InputRouter:
     bindings: list[dict[str, str]] = field(default_factory=default_bindings)
     lifecycle: DeviceLifecycle = field(default_factory=DeviceLifecycle)
     held: dict[str, set[str]] = field(default_factory=dict)
+    pending_pressed: dict[str, set[str]] = field(default_factory=dict)
     previous: list[int] = field(default_factory=lambda: [0, 0])
     previous_shell: set[SemanticAction] = field(default_factory=set)
 
@@ -179,11 +180,13 @@ class InputRouter:
         held = self.held.setdefault(source, set())
         if pressed:
             held.add(token)
+            self.pending_pressed.setdefault(source, set()).add(token)
         else:
             held.discard(token)
 
     def clear(self) -> None:
         self.held.clear()
+        self.pending_pressed.clear()
         self.previous = [0, 0]
         self.previous_shell.clear()
 
@@ -192,7 +195,12 @@ class InputRouter:
         controller = self.lifecycle.assignments.get(player)
         if controller is not None:
             sources.add(f"controller:{controller}")
-        physical = set().union(*(self.held.get(source, set()) for source in sources))
+        physical = set().union(
+            *(
+                self.held.get(source, set()) | self.pending_pressed.get(source, set())
+                for source in sources
+            )
+        )
         actions = {
             SemanticAction(name)
             for name, token in self.bindings[player].items()
@@ -214,10 +222,19 @@ class InputRouter:
                 held |= ACTION_BITS[action]
             frames.append(InputFrame.from_held(self.previous[player], held))
             self.previous[player] = held
+        self.pending_pressed.clear()
         return frames[0], frames[1]
 
     def shell_edges(self) -> set[SemanticAction]:
         held = set().union(*(self.actions_for(player) & SHELL_ACTIONS for player in (0, 1)))
+        shell_tokens = {
+            token
+            for binding in self.bindings
+            for name, token in binding.items()
+            if SemanticAction(name) in SHELL_ACTIONS
+        }
+        for pending in self.pending_pressed.values():
+            pending.difference_update(shell_tokens)
         edges = held - self.previous_shell
         self.previous_shell = held
         return edges

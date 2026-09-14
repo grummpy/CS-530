@@ -111,6 +111,14 @@ class MixerAudioService:
         except (AttributeError, OSError, self.pygame.error) as error:
             self._fail(error)
 
+    def stop_match_music(self) -> None:
+        if self.safe_mode:
+            return
+        try:
+            self.pygame.mixer.music.fadeout(250)
+        except (AttributeError, OSError, self.pygame.error) as error:
+            self._fail(error)
+
     def shutdown(self) -> None:
         if not self.safe_mode:
             try:
