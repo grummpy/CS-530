@@ -16,6 +16,7 @@ from fighter.presentation.effects import ClayEffectPool
 from fighter.presentation.events import PresentationDispatcher
 from fighter.presentation.finishers import FinisherPlayback
 from fighter.presentation.shell import Shell
+from fighter.resource_paths import resource_path
 from fighter.sim.enums import MatchPhase
 from fighter.sim.events import PresentationEvent
 from fighter.sim.kernel import SessionKernel
@@ -47,6 +48,55 @@ def _draw_menu(pygame: Any, screen: Any, font: Any, shell: Shell, title: str,
         screen.blit(font.render(f"{'▶ ' if selected else '  '}{entry}", True, color), (138, rect.y + 11))
 
 
+def _load_title_background(pygame: Any) -> Any | None:
+    """Load the approved title key art once and preserve a plain fallback."""
+    try:
+        image = pygame.image.load(resource_path("assets/ui/title/title_hero_v1.png").as_posix()).convert()
+        return pygame.transform.smoothscale(image, (1280, 720))
+    except (OSError, pygame.error):
+        return None
+
+
+def _draw_title(pygame: Any, screen: Any, shell: Shell, entries: list[str],
+                detail: str, high_contrast: bool, background: Any | None) -> None:
+    """Render the cinematic four-fighter front door at the logical resolution."""
+    if background is None:
+        screen.fill((24, 12, 31))
+    else:
+        screen.blit(background, (0, 0))
+    vignette = pygame.Surface((1280, 720), pygame.SRCALPHA)
+    vignette.fill((5, 3, 12, 46))
+    pygame.draw.rect(vignette, (8, 4, 18, 155), (0, 0, 1280, 190))
+    pygame.draw.rect(vignette, (8, 4, 18, 185), (0, 585, 1280, 135))
+    screen.blit(vignette, (0, 0))
+
+    title_font = pygame.font.SysFont("impact", 94)
+    subtitle_font = pygame.font.SysFont("arial", 21, bold=True)
+    menu_font = pygame.font.SysFont("arial", 24, bold=True)
+    title = title_font.render("PAPIER PARADE", True, (255, 206, 54))
+    shadow = title_font.render("PAPIER PARADE", True, (45, 4, 36))
+    title_x = (1280 - title.get_width()) // 2
+    screen.blit(shadow, (title_x + 5, 31))
+    screen.blit(title, (title_x, 24))
+    tagline = subtitle_font.render("FOUR EGOS ENTER  •  THE CLAY REMEMBERS", True, (255, 245, 224))
+    screen.blit(tagline, ((1280 - tagline.get_width()) // 2, 124))
+
+    button_width, gap = 245, 18
+    start_x = (1280 - (button_width * len(entries) + gap * (len(entries) - 1))) // 2
+    for index, entry in enumerate(entries):
+        rect = pygame.Rect(start_x + index * (button_width + gap), 618, button_width, 58)
+        selected = index == shell.focus
+        fill = (225, 61, 91) if selected else (28, 23, 42)
+        border = (255, 224, 104) if selected else (194, 178, 210)
+        pygame.draw.rect(screen, (8, 5, 16), rect.move(0, 5), border_radius=12)
+        pygame.draw.rect(screen, fill, rect, border_radius=12)
+        pygame.draw.rect(screen, border, rect, 3 if selected else 1, border_radius=12)
+        label = menu_font.render(entry.upper(), True, (255, 255, 255))
+        screen.blit(label, label.get_rect(center=rect.center))
+    hint = pygame.font.SysFont("arial", 16).render(detail, True, (225, 216, 232))
+    screen.blit(hint, ((1280 - hint.get_width()) // 2, 691))
+
+
 def _present_event(audio: MixerAudioService, effects: ClayEffectPool, reduced: bool,
                    event: PresentationEvent) -> None:
     audio.dispatch(event)
@@ -66,6 +116,7 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
     fighters = ("rhinestone_angel", "mr_president", "tech_billionaire", "master_chef")
     p1_id, p2_id, training, game = fighters[0], fighters[1], False, None
     stage_id = "electric_assembly_hall"
+    title_background = _load_title_background(pygame)
     match_assets: MatchAssets | None = None
     audio = MixerAudioService(
         pygame,
@@ -181,9 +232,17 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                             device = next(iter(router.lifecycle.devices), None)
                             if device is not None:
                                 router.lifecycle.assign(device, shell.focus - 7)
-            _draw_menu(pygame, screen, font, shell, shell.screen.upper(), entries,
-                       diagnostic or "Arrow/D-pad navigate • Enter/button 0 confirm • Esc/button 1 back",
-                       settings.accessibility.high_contrast)
+            detail = diagnostic or "Arrow/D-pad navigate • Enter/button 0 confirm • Esc/button 1 back"
+            if shell.screen == "title":
+                _draw_title(
+                    pygame, screen, shell, entries, detail,
+                    settings.accessibility.high_contrast, title_background,
+                )
+            else:
+                _draw_menu(
+                    pygame, screen, font, shell, shell.screen.upper(), entries,
+                    detail, settings.accessibility.high_contrast,
+                )
         elif game is not None and match_assets is not None:
             if SemanticAction.PAUSE in edges or SemanticAction.BACK in edges:
                 shell.pause("Paused") if not shell.paused else shell.resume()
