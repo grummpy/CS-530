@@ -177,6 +177,11 @@ def _start_attack(
         )
         return
     if fighter.mode is FighterMode.ATTACK and cancel is None:
+        queued = pressed & int(
+            Action.LIGHT | Action.MEDIUM | Action.HEAVY | Action.SPECIAL | Action.THROW
+        )
+        if queued and fighter.attack_ticks <= 6:
+            fighter.buffered_action, fighter.buffer_ticks = queued, 8
         return
     for action, move_name in (
         (Action.LIGHT, "light"),
@@ -283,6 +288,8 @@ def _resolve_strike(
         )
         attacker.attack_confirm, events[:] = "block", [*events, "block"]
         _present(match, "block", actor, target, defender, move.move_id, damage)
+        defender.x += attacker.facing * max(4, attacker.attack_kind * 3)
+        match.hitstop_ticks = max(match.hitstop_ticks, 2 + attacker.attack_kind)
     else:
         _damage(defender, damage)
         defender.stun_ticks, defender.combo_count = move.hitstun, defender.combo_count + 1
@@ -292,6 +299,8 @@ def _resolve_strike(
             defender.mode = FighterMode.HITSTUN
         attacker.attack_confirm, events[:] = "hit", [*events, "hit"]
         _present(match, "hit", actor, target, defender, move.move_id, damage)
+        defender.x += attacker.facing * (7 + attacker.attack_kind * 5)
+        match.hitstop_ticks = max(match.hitstop_ticks, 3 + attacker.attack_kind)
     attacker.hit_this_attack = True
 
 
@@ -382,6 +391,10 @@ def _advance_states(
         fighter.attack_ticks -= 1
         if fighter.attack_ticks == 0 and fighter.mode in {FighterMode.ATTACK, FighterMode.THROW}:
             fighter.mode, fighter.combo_count = FighterMode.NEUTRAL, 0
+    if fighter.buffer_ticks:
+        fighter.buffer_ticks -= 1
+        if fighter.buffer_ticks == 0:
+            fighter.buffered_action = 0
     if fighter.stun_ticks:
         fighter.stun_ticks -= 1
         if fighter.stun_ticks == 0 and fighter.mode in {FighterMode.HITSTUN, FighterMode.BLOCKSTUN}:
@@ -479,7 +492,28 @@ def tick(match: MatchState, inputs: tuple[InputFrame, InputFrame]) -> None:
         return
     match.events.clear()
     match.presentation_events.clear()
+    if match.fight_start_ticks:
+        match.fight_start_ticks -= 1
+        match.tick += 1
+        return
+    if match.hitstop_ticks:
+        for fighter, frame in zip((match.p1, match.p2), inputs, strict=True):
+            queued = frame.pressed & int(
+                Action.LIGHT | Action.MEDIUM | Action.HEAVY | Action.SPECIAL | Action.THROW
+            )
+            if queued:
+                fighter.buffered_action, fighter.buffer_ticks = queued, 10
+        match.hitstop_ticks -= 1
+        match.tick += 1
+        return
     p1_frame, p2_frame = inputs
+    buffered_frames = []
+    for fighter, frame in ((match.p1, p1_frame), (match.p2, p2_frame)):
+        if fighter.buffered_action:
+            frame = InputFrame(frame.held, frame.pressed | fighter.buffered_action, frame.released)
+            fighter.buffered_action = fighter.buffer_ticks = 0
+        buffered_frames.append(frame)
+    p1_frame, p2_frame = buffered_frames
     for fighter, frame in ((match.p1, p1_frame), (match.p2, p2_frame)):
         if frame.pressed & Action.THROW:
             fighter.throw_tech_until = match.tick + RULES.throw_startup
@@ -515,6 +549,11 @@ def tick(match: MatchState, inputs: tuple[InputFrame, InputFrame]) -> None:
     _resolve_throw(match.p2, match.p1, p1_frame, match.events, match, 2, 1)
     for player, fighter in enumerate((match.p1, match.p2), 1):
         _advance_states(fighter, match.events, match, player)
+    for fighter in (match.p1, match.p2):
+        if fighter.mode is FighterMode.NEUTRAL and fighter.buffered_action:
+            queued = fighter.buffered_action
+            fighter.buffered_action = fighter.buffer_ticks = 0
+            _start_attack(fighter, fighter.definition, queued, match.events)
     if not match.training:
         match.round_ticks = max(0, match.round_ticks - 1)
     _classify_terminal(match)

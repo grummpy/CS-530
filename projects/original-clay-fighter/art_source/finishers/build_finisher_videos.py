@@ -91,27 +91,83 @@ def render(winner: str, loser: str, frame: int) -> Image.Image:
             splat(draw, 475, 292, 78, FIGHTERS.index(loser))
     elif winner == "mr_president":
         grounded(image, victor, 175)
-        if frame < 18:
-            grounded(image, victim, victim_x)
-        draw.rounded_rectangle(
-            (205, 160, 237, 202), 6, fill=(30, 40, 66, 255), outline=(210, 220, 230, 255), width=2
+        if frame < 19:
+            grounded(image, victim, victim_x, -max(0, frame - 14) * 3)
+        # Oversized 1980s handset: the call is the joke, never a featureless block.
+        draw.arc((190, 146, 246, 205), 70, 290, fill=(225, 232, 240, 255), width=8)
+        draw.ellipse(
+            (197, 145, 215, 165), fill=(27, 35, 55, 255), outline=(235, 238, 242, 255), width=2
         )
-        if frame >= 9:
+        draw.ellipse(
+            (221, 183, 240, 203), fill=(27, 35, 55, 255), outline=(235, 238, 242, 255), width=2
+        )
+        if 7 <= frame < 21:
             for j in range(3):
                 jet_x = 170 + ((frame * 28 + j * 190) % 700)
                 draw.polygon(
-                    ((jet_x, 70 + j * 18), (jet_x + 52, 80 + j * 18), (jet_x, 91 + j * 18)),
-                    fill=(186, 202, 215, 255),
+                    (
+                        (jet_x, 68 + j * 18),
+                        (jet_x + 58, 80 + j * 18),
+                        (jet_x + 17, 88 + j * 18),
+                        (jet_x - 8, 101 + j * 18),
+                    ),
+                    fill=(176, 194, 211, 255),
+                    outline=(31, 38, 54, 255),
                 )
-        if frame >= 18:
-            radius = min(105, 18 + (frame - 18) * 11)
+                if frame >= 12:
+                    bomb_y = 100 + min(125, (frame - 12) * 17 + j * 8)
+                    draw.ellipse(
+                        (jet_x + 12, bomb_y, jet_x + 25, bomb_y + 23),
+                        fill=(42, 45, 53, 255),
+                        outline=(255, 180, 45, 255),
+                        width=2,
+                    )
+        if frame >= 19:
+            growth = min(1.0, (frame - 18) / 7)
+            # Layered clay fireball, smoke lobes, crater, costume fragments, and splatter.
+            for j in range(11):
+                angle = j * math.tau / 11 + frame * 0.07
+                reach = 25 + growth * (35 + (j % 4) * 8)
+                cx = 470 + math.cos(angle) * reach
+                cy = 245 + math.sin(angle) * reach * 0.72
+                radius = 13 + int(growth * (22 + j % 3 * 5))
+                color = ((255, 224, 76, 250), (255, 124, 27, 245), (91, 61, 67, 235))[j % 3]
+                draw.ellipse(
+                    (cx - radius, cy - radius, cx + radius, cy + radius),
+                    fill=color,
+                    outline=(83, 22, 29, 220),
+                    width=2,
+                )
             draw.ellipse(
-                (465 - radius, 250 - radius, 465 + radius, 250 + radius),
-                fill=(255, 143, 25, 235),
-                outline=(255, 235, 122, 255),
-                width=8,
+                (380, 282, 565, 326), fill=(31, 24, 29, 245), outline=(237, 76, 51, 255), width=4
             )
-            splat(draw, 475, 300, min(78, radius), FIGHTERS.index(loser) + 4)
+            splat(draw, 470, 292, 46 + int(growth * 48), FIGHTERS.index(loser) + 4)
+            # Rhinestone wings, guitar, boots, and hair remain recognizable in the debris.
+            draw.polygon(
+                ((405, 205), (375, 168), (423, 184)),
+                fill=(255, 222, 112, 255),
+                outline=(255, 255, 238, 255),
+            )
+            draw.polygon(
+                ((520, 196), (551, 162), (536, 211)),
+                fill=(255, 222, 112, 255),
+                outline=(255, 255, 238, 255),
+            )
+            draw.line((414, 236, 545, 180), fill=(147, 61, 176, 255), width=10)
+            draw.regular_polygon(
+                (545, 180, 20),
+                5,
+                rotation=18,
+                fill=(255, 83, 175, 255),
+                outline=(255, 218, 69, 255),
+            )
+            draw.text(
+                (391, 310),
+                "PROPERTY VALUE: LIQUID",
+                fill=(255, 228, 170, 255),
+                stroke_width=1,
+                stroke_fill=(38, 7, 19, 255),
+            )
     elif winner == "tech_billionaire":
         grounded(image, victor, 180)
         if beat < 4:
@@ -137,7 +193,7 @@ def render(winner: str, loser: str, frame: int) -> Image.Image:
             draw.line((260, y + 35, 520, y - 18), fill=ACCENTS[winner], width=2)
         if beat == 4:
             splat(draw, 475, 292, 82, FIGHTERS.index(loser) + 12)
-    if frame >= 24:
+    if frame >= 24 and winner != "mr_president":
         draw.rounded_rectangle(
             (110, 250, 530, 312), 18, fill=(12, 7, 20, 225), outline=ACCENTS[winner], width=4
         )

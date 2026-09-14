@@ -21,3 +21,14 @@ input handling, and visual assets. Their release-blocking findings were fixed:
 
 Verification: Ruff passed, 54 Pytest tests passed, all 12 finishers decoded all
 360 frames, and the real SDL/Pygame title-to-selection-to-CPU-match flow passed.
+
+## Follow-up gameplay correction — 2026-09-14
+
+- Removed the victory pose that had been included in the repeating idle clip.
+- Added a 90-tick READY/FIGHT lock so neither fighter drifts before play begins.
+- Added impact freeze, knockback, and a ten-tick attack input buffer, including
+  inputs pressed during impact freeze.
+- Rebuilt Mr. President versus Rhinestone Angel around the detailed handset,
+  jet approach, falling payloads, layered clay fireball, crater, irregular clay
+  splatter, and recognizable wing, guitar, boot, and hair debris.
+- Removed the large rectangular end banner from that sequence.

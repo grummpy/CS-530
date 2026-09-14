@@ -37,3 +37,15 @@ def test_cpu_levels_are_deterministic_and_have_distinct_cadence() -> None:
         outputs[level] = [(frame.held, frame.pressed) for frame in frames]
         assert any(frame.held & (Action.LIGHT | Action.MEDIUM | Action.HEAVY) for frame in frames)
     assert len({tuple(value) for value in outputs.values()}) == 3
+
+
+def test_ready_countdown_prevents_cpu_or_fighter_startup_drift() -> None:
+    game = SessionKernel(seed=9)
+    game.match.fight_start_ticks = 90
+    cpu = CpuController("Hard")
+    start = (game.match.p1.x, game.match.p2.x, game.match.round_ticks)
+    for _ in range(90):
+        game.tick((cpu.frame(game.match), cpu.frame(game.match)))
+    assert (game.match.p1.x, game.match.p2.x, game.match.round_ticks) == start
+    game.tick((cpu.frame(game.match), cpu.frame(game.match)))
+    assert (game.match.p1.x, game.match.p2.x) != start[:2]

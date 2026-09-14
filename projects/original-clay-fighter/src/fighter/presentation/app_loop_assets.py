@@ -120,6 +120,12 @@ def draw_match(
     score = f"BEST OF 3  •  ROUND {match.round_number}  •  {match.p1_round_wins}  —  {match.p2_round_wins}"
     score_surface = score_font.render(score, True, (255, 232, 132))
     screen.blit(score_surface, score_surface.get_rect(center=(640, 83)))
+    if match.fight_start_ticks:
+        countdown = "READY" if match.fight_start_ticks > 30 else "FIGHT!"
+        countdown_surface = pygame.font.SysFont("impact", 78).render(
+            countdown, True, (255, 214, 64)
+        )
+        screen.blit(countdown_surface, countdown_surface.get_rect(center=(640, 235)))
     control_panel = pygame.Surface((1280, 96), pygame.SRCALPHA)
     control_panel.fill((7, 5, 15, 218))
     screen.blit(control_panel, (0, 624))

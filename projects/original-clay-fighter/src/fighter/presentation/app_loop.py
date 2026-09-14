@@ -485,6 +485,7 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                     else:
                         training, shell.screen = False, "match"
                         game, sim_clock = SessionKernel(seed, p1_id, p2_id), FixedStepClock()
+                        game.match.fight_start_ticks = 90
                         cpu = CpuController(cpu_difficulty)
                         match_assets = load_match_assets(pygame, (p1_id, p2_id), stage_id)
                         audio.start_match_music(seed)
@@ -584,6 +585,7 @@ def run_windowed_g3(title: str, seed: int, on_tick: Callable[[int], None] | None
                     game = None
                     continue
                 game.reset()
+                game.match.fight_start_ticks = 90
                 sim_clock.reset()
                 if cpu is not None:
                     cpu.previous = 0

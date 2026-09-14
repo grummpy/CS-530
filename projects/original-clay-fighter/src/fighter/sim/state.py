@@ -57,6 +57,8 @@ class FighterState:
     special_charge: int = 0
     blocking: bool = False
     throw_tech_until: int = 0
+    buffered_action: int = 0
+    buffer_ticks: int = 0
 
     @property
     def airborne(self) -> bool:
@@ -85,6 +87,8 @@ class FighterState:
             "special_charge": self.special_charge,
             "blocking": self.blocking,
             "throw_tech_until": self.throw_tech_until,
+            "buffered_action": self.buffered_action,
+            "buffer_ticks": self.buffer_ticks,
         }
 
 
@@ -106,6 +110,8 @@ class MatchState:
     p1_round_wins: int = 0
     p2_round_wins: int = 0
     first_to: int = 2
+    fight_start_ticks: int = 0
+    hitstop_ticks: int = 0
 
     def snapshot(self) -> dict[str, object]:
         return {
@@ -122,6 +128,8 @@ class MatchState:
             "p1_round_wins": self.p1_round_wins,
             "p2_round_wins": self.p2_round_wins,
             "first_to": self.first_to,
+            "fight_start_ticks": self.fight_start_ticks,
+            "hitstop_ticks": self.hitstop_ticks,
         }
 
 

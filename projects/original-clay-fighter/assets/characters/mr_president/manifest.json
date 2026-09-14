@@ -10,10 +10,7 @@
   "clips": {
     "idle": {
       "frames": [
-        "premium_00.png",
-        "premium_00.png",
-        "premium_00.png",
-        "premium_14.png"
+        "premium_00.png"
       ],
       "fps": 8
     },

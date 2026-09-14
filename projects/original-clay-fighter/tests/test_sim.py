@@ -168,6 +168,10 @@ def test_cancel_requires_confirm_and_advances_once():
         game.tick()
     assert game.match.p1.attack_confirm == "hit"
     game.tick((InputFrame.from_held(0, Action.MEDIUM), InputFrame()))
+    for _ in range(6):
+        if game.match.p1.attack_move == "medium":
+            break
+        game.tick()
     assert game.match.p1.attack_move == "medium"
     assert game.match.p1.cancel_depth == 1
 

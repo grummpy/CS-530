@@ -39,7 +39,7 @@ POSE_INDEX = {
     "lose": 15,
 }
 CLIP_SEQUENCE = {
-    "idle": (0, 0, 0, 14),
+    "idle": (0,),
     "walk": (0, 1, 2, 1),
     "run": (1, 2, 2, 1),
     "jump": (3, 3),
