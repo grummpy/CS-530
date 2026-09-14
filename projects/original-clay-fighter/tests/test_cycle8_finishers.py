@@ -75,6 +75,17 @@ def test_tech_billionaire_vs_mr_president_set_ko_uses_finisher_playback() -> Non
     playback = FinisherPlayback("tech_billionaire_vs_mr_president")
     assert not playback.fallback
     game = SessionKernel(p1_id="tech_billionaire", p2_id="mr_president")
+    game.match.p1_round_wins = 1
+    game.match.p2.health = 0
+    game.tick()
+    assert game.match.phase is MatchPhase.KO_HOLD
+    assert game.match.result and game.match.result.finisher_variant == (
+        "tech_billionaire_vs_mr_president"
+    )
+    for _ in range(30):
+        game.tick()
+    assert game.match.phase is MatchPhase.FINISHER_WINDOW
+    assert [event.kind for event in game.presentation_events()] == ["finisher"]
 
 
 def test_tech_billionaire_vs_master_chef_set_ko_uses_finisher_playback() -> None:
@@ -90,7 +101,7 @@ def test_tech_billionaire_vs_master_chef_set_ko_uses_finisher_playback() -> None
     game.tick()
     assert game.match.phase is MatchPhase.KO_HOLD
     assert game.match.result and game.match.result.finisher_variant == (
-        "tech_billionaire_vs_mr_president"
+        "tech_billionaire_vs_master_chef"
     )
     for _ in range(30):
         game.tick()
