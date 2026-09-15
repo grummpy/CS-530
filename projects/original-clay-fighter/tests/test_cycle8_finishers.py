@@ -67,6 +67,24 @@ def test_all_authored_variants_resolve_to_exactly_thirty_frames() -> None:
     )
 
 
+def test_mr_president_vs_master_chef_set_ko_uses_finisher_playback() -> None:
+    resolved = resolve_finisher_variant("mr_president_vs_master_chef")
+    assert resolved is not None and len(resolved.frames) == 30
+    assert (finisher_root() / "mr_president_vs_master_chef.mp4").is_file()
+    playback = FinisherPlayback("mr_president_vs_master_chef")
+    assert not playback.fallback
+    game = SessionKernel(p1_id="mr_president", p2_id="master_chef")
+    game.match.p1_round_wins = 1
+    game.match.p2.health = 0
+    game.tick()
+    assert game.match.phase is MatchPhase.KO_HOLD
+    assert game.match.result and game.match.result.finisher_variant == "mr_president_vs_master_chef"
+    for _ in range(30):
+        game.tick()
+    assert game.match.phase is MatchPhase.FINISHER_WINDOW
+    assert [event.kind for event in game.presentation_events()] == ["finisher"]
+
+
 def test_rolling_cache_is_byte_bounded_lru_and_teardown_releases_memory() -> None:
     class Surface:
         def __init__(self, size: tuple[int, int]) -> None:
