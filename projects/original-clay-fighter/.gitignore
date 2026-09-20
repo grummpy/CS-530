@@ -1,6 +1,7 @@
 __pycache__/
 *.py[cod]
 .venv/
+.launcher-venv/
 .release-venv/
 src/*.egg-info/
 .mypy_cache/

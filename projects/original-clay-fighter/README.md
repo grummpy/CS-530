@@ -16,6 +16,14 @@ The playable combat foundation is being completed in this repository. See
 
 See [docs/setup.md](docs/setup.md).
 
+### macOS launcher
+
+Mac players can download the ready-made
+[Papier Parade launcher](tools/macos_launcher/Papier-Parade-macOS-Launcher.zip).
+Unzip it and open **Papier Parade.app**; it updates the game from the playable
+GitHub branch before launching. Source and checksum details are in
+[tools/macos_launcher](tools/macos_launcher/README.md).
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
