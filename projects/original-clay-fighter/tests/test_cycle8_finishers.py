@@ -130,6 +130,22 @@ def test_tech_billionaire_vs_rhinestone_angel_set_ko_uses_finisher_playback() ->
     assert [event.kind for event in game.presentation_events()] == ["finisher"]
 
 
+def test_master_chef_vs_tech_billionaire_set_ko_uses_finisher_playback() -> None:
+    variant = "master_chef_vs_tech_billionaire"
+    resolved = resolve_finisher_variant(variant)
+    assert resolved is not None and len(resolved.frames) == 30
+    assert len({path.read_bytes() for path in resolved.frames}) == 30
+    assert (finisher_root() / f"{variant}.mp4").is_file()
+    assert not FinisherPlayback(variant).fallback
+    game = SessionKernel(p1_id="master_chef", p2_id="tech_billionaire")
+    game.match.p1_round_wins, game.match.p2.health = 1, 0
+    game.tick()
+    assert game.match.result and game.match.result.finisher_variant == variant
+    for _ in range(30):
+        game.tick()
+    assert game.match.phase is MatchPhase.FINISHER_WINDOW
+
+
 def test_rolling_cache_is_byte_bounded_lru_and_teardown_releases_memory() -> None:
     class Surface:
         def __init__(self, size: tuple[int, int]) -> None:
