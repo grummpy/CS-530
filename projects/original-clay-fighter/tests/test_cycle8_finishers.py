@@ -88,6 +88,27 @@ def test_tech_billionaire_vs_mr_president_set_ko_uses_finisher_playback() -> Non
     assert [event.kind for event in game.presentation_events()] == ["finisher"]
 
 
+def test_tech_billionaire_vs_master_chef_set_ko_uses_finisher_playback() -> None:
+    resolved = resolve_finisher_variant("tech_billionaire_vs_master_chef")
+    assert resolved is not None and len(resolved.frames) == 30
+    assert len({path.read_bytes() for path in resolved.frames}) == 30
+    assert (finisher_root() / "tech_billionaire_vs_master_chef.mp4").is_file()
+    playback = FinisherPlayback("tech_billionaire_vs_master_chef")
+    assert not playback.fallback
+    game = SessionKernel(p1_id="tech_billionaire", p2_id="master_chef")
+    game.match.p1_round_wins = 1
+    game.match.p2.health = 0
+    game.tick()
+    assert game.match.phase is MatchPhase.KO_HOLD
+    assert game.match.result and game.match.result.finisher_variant == (
+        "tech_billionaire_vs_master_chef"
+    )
+    for _ in range(30):
+        game.tick()
+    assert game.match.phase is MatchPhase.FINISHER_WINDOW
+    assert [event.kind for event in game.presentation_events()] == ["finisher"]
+
+
 def test_tech_billionaire_vs_rhinestone_angel_set_ko_uses_finisher_playback() -> None:
     resolved = resolve_finisher_variant("tech_billionaire_vs_rhinestone_angel")
     assert resolved is not None and len(resolved.frames) == 30
