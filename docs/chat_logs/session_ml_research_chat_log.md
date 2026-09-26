@@ -174,3 +174,30 @@
 > Created and pushed commit `cb05ee6` (`docs: add comprehensive machine learning and hardware research suite`).  
 > Opened Pull Request **#12** (`docs: add comprehensive machine learning and hardware research suite`).  
 > *PR #12 merged into `main`.*
+
+---
+
+### Turn 7
+**Timestamp:** `2026-09-25T20:25:29Z`  
+**Speaker:** User  
+**Prompt:**  
+> please add a copy of the chat logs into my project folder. The chat logs need to be reviewed.
+
+**Assistant Response:**  
+> The complete, formatted turn-by-turn chat transcript has been saved and pushed to your project repository:
+> - **Primary Transcript:** `docs/chat_logs/session_ml_research_chat_log.md`
+> - **Research Cross-Reference:** `research/session_chat_log.md`
+
+---
+
+### Turn 8
+**Timestamp:** `2026-09-25T20:27:36Z`  
+**Speaker:** User  
+**Prompt:**  
+> please make all articaft word document and pngs. psuh to the folder also
+
+**Assistant Response:**  
+> All research artifacts have been generated as **Microsoft Word documents (`.docx`)** with embedded figures, styled tables, and formatted headings, alongside high-resolution **PNG diagrams**, committed and pushed to `grummpy-ml-model-background-research`:
+> - Generated Word Documents: `.docx` for all research papers, guides, and transcripts.
+> - High-resolution PNGs in `research/diagrams/`.
+
