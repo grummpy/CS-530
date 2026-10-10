@@ -36,6 +36,26 @@ class CalculateStatisticsTests(unittest.TestCase):
         s = format_summary(calculate_statistics([1, 2, 3]))
         self.assertEqual(s, "Avg: 2.0 Max: 3 Min: 1")
 
+    def test_enhanced_stats(self):
+        r = calculate_statistics([1, 2, 2, 3, 4])
+        self.assertEqual(r["range"], 3)
+        self.assertEqual(r["median"], 2)
+        self.assertEqual(r["mode"], [2])
+        self.assertAlmostEqual(r["variance"], 1.3)
+        self.assertEqual((r["q1"], r["q3"], r["iqr"]), (2, 3, 1))
+        self.assertEqual(r["outliers"], [])
+
+    def test_outlier_detected(self):
+        r = calculate_statistics([10, 11, 12, 11, 10, 500])
+        self.assertEqual(r["outliers"], [500])
+
+    def test_single_value_has_no_spread(self):
+        r = calculate_statistics([7])
+        self.assertIsNone(r["variance"])
+        self.assertIsNone(r["std_dev"])
+        self.assertEqual(r["outliers"], [])
+        self.assertEqual(r["mode"], [7])
+
 
 if __name__ == "__main__":
     unittest.main()
