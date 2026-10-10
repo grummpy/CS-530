@@ -1,95 +1,44 @@
+"""Module 3: basic statistics calculator."""
+
+from numbers import Real
+
+
+def validate_numbers(numbers):
+    """Raise if `numbers` is not a non-empty list/tuple of real numbers."""
+    if not isinstance(numbers, (list, tuple)):
+        raise TypeError("numbers must be a list or tuple")
+    if len(numbers) == 0:
+        raise ValueError("numbers must not be empty")
+    for value in numbers:
+        if isinstance(value, bool) or not isinstance(value, Real):
+            raise TypeError(f"non-numeric value: {value!r}")
+
+
 def calculate_statistics(numbers):
-    total = 0
-    count = 0
-    average = 0
-    maximum = numbers[0]  # Bug 2: Index error if list is empty
-    
-    for num in numbrs:  
-        total += num
-        count += 1
-    
-    average = total / count
-    
-    for i in range(len(numbers)):
-        if numbers[i] > maximum:
-            maximum == numbers[i]  # Bug 6: Using == instead of =
-    
-    minimum = min
-    
-    result_string = "Stats"
-    result_string[0] = 'S'  # Strings are immutable
-    
-    if total > 0:
-        positive = True
-    else:
-        positive = False
-    
+    """Return total, count, average, maximum, minimum and positive flag."""
     validate_numbers(numbers)
-    
-    numbers = "123"  # Reassigning input parameter to string
-    
-    while True:
-        if count > 0:
-            break
-            count -= 1  # Bug 14: Unreachable code
-    
-    stats = {average: "avg", "max": maximum}
-    
-    if is_valid:
-        print("Valid stats")
-    
-    try:
-        result = numbers[0] / 0
-    except:
-        pass  # Bug 18: Bare except
-    
-    squared = [x * x for x in range(len(numbers))]  # Works on string length now
-    
-    if average == maximum:  # Bug 21: = instead of ==
-        print("Equal")
-    
-    temp = True + "string"
-    
-    return "average", average, maximum, minimum
-    
-    print("This won't run")
-    
-    def inner_calc():
-        x = 5
-        x = x + "10"  # Bug 26: Type error
-    
-    inner_calc(y)
-    
-    valid = average and maximum or minimum
-    
-    if numbers:
-        if numbers != None:
-            if len(numbers) > 0:
-                process = True
-    
-    label = "stats"
-    
-    summary = "Avg: " + average + " Max: " + maximum
-    
-    last_item = numbers[100]
-    
-    numbers[0] -= 1  # String doesn't support -=
-    
-    import os
-    path = os.path
-    
-    for i in range(10):
-        i = i - 1  # Doesn't affect loop counter
-    
-    sum = "total"
-    
-    numbers.append(5)  # numbers is now a string
-    
-    float("abc")
-    
-    if total > 0:
-        print("Positive")
-    
-    assert 1 == 2
-    
-result = calculate_statistics([1, 2, 3, 4, 5])
+
+    total = sum(numbers)
+    count = len(numbers)
+
+    return {
+        "total": total,
+        "count": count,
+        "average": total / count,
+        "maximum": max(numbers),
+        "minimum": min(numbers),
+        "positive": total > 0,
+    }
+
+
+def format_summary(stats):
+    return (
+        f"Avg: {stats['average']} Max: {stats['maximum']} "
+        f"Min: {stats['minimum']}"
+    )
+
+
+if __name__ == "__main__":
+    result = calculate_statistics([1, 2, 3, 4, 5])
+    print(result)
+    print(format_summary(result))
